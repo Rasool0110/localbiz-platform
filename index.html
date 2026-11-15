@@ -1,0 +1,209 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LocalBiz | Business Login</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            background: #f3f5f9;
+            font-family: Arial, sans-serif;
+            color: #1e293b;
+        }
+
+        .login-card {
+            width: 100%;
+            max-width: 420px;
+            padding: 36px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.08);
+        }
+
+        .brand {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .brand h1 {
+            margin: 0;
+            font-size: 30px;
+            color: #2563eb;
+        }
+
+        .brand p {
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        label {
+            display: block;
+            margin: 18px 0 7px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        input {
+            width: 100%;
+            padding: 13px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 15px;
+        }
+
+        input:focus {
+            outline: 2px solid #93c5fd;
+            border-color: #2563eb;
+        }
+
+        button {
+            width: 100%;
+            margin-top: 24px;
+            padding: 14px;
+            border: 0;
+            border-radius: 8px;
+            background: #2563eb;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: wait;
+        }
+
+        #message {
+            margin-top: 18px;
+            font-size: 14px;
+            text-align: center;
+            line-height: 1.5;
+        }
+
+        .error {
+            color: #dc2626;
+        }
+
+        .success {
+            color: #15803d;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="login-card">
+
+        <div class="brand">
+            <h1>LocalBiz</h1>
+            <p>Business Management Platform</p>
+        </div>
+
+        <form id="loginForm">
+
+            <label for="email">Email address</label>
+            <input
+                type="email"
+                id="email"
+                placeholder="Enter your email"
+                autocomplete="username"
+                required
+            >
+
+            <label for="password">Password</label>
+            <input
+                type="password"
+                id="password"
+                placeholder="Enter your password"
+                autocomplete="current-password"
+                required
+            >
+
+            <button type="submit" id="loginButton">
+                Sign In
+            </button>
+
+            <div id="message" role="status"></div>
+
+        </form>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./supabase-config.js"></script>
+
+    <script>
+        const supabase = window.localBizSupabase;
+
+        const loginForm = document.getElementById("loginForm");
+        const loginButton = document.getElementById("loginButton");
+        const message = document.getElementById("message");
+
+        function showMessage(text, type) {
+            message.textContent = text;
+            message.className = type;
+        }
+
+        // If the user is already logged in, open the dashboard.
+        async function checkExistingSession() {
+            const { data, error } = await supabase.auth.getSession();
+
+            if (error) {
+                showMessage(error.message, "error");
+                return;
+            }
+
+            if (data.session) {
+                window.location.href = "./admin.html";
+            }
+        }
+
+        loginForm.addEventListener("submit", async function(event) {
+
+            event.preventDefault();
+
+            loginButton.disabled = true;
+            loginButton.textContent = "Signing in...";
+
+            showMessage("", "");
+
+            const email = document.getElementById("email").value.trim();
+            const password = document.getElementById("password").value;
+
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email: email,
+                password: password
+            });
+
+            if (error) {
+                showMessage(error.message, "error");
+                loginButton.disabled = false;
+                loginButton.textContent = "Sign In";
+                return;
+            }
+
+            if (data.session) {
+                showMessage("Login successful. Opening dashboard...", "success");
+                window.location.href = "./admin.html";
+            }
+
+        });
+
+        checkExistingSession();
+    </script>
+
+</body>
+</html>
