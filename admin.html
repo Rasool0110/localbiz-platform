@@ -1,0 +1,313 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LocalBiz | Business Dashboard</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: #f3f5f9;
+            color: #1e293b;
+            font-family: Arial, sans-serif;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 18px 30px;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        header h2 {
+            margin: 0;
+            color: #2563eb;
+        }
+
+        .logout-button {
+            padding: 10px 18px;
+            border: 0;
+            border-radius: 7px;
+            background: #dc2626;
+            color: white;
+            cursor: pointer;
+        }
+
+        main {
+            max-width: 1000px;
+            margin: 35px auto;
+            padding: 0 20px;
+        }
+
+        .welcome {
+            margin-bottom: 25px;
+        }
+
+        .welcome p {
+            color: #64748b;
+        }
+
+        .business-card {
+            padding: 28px;
+            background: white;
+            border-radius: 14px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+        }
+
+        .business-card h2 {
+            margin-top: 0;
+            font-size: 26px;
+        }
+
+        .details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .detail-box {
+            padding: 18px;
+            background: #f8fafc;
+            border-radius: 9px;
+        }
+
+        .detail-box small {
+            display: block;
+            margin-bottom: 8px;
+            color: #64748b;
+        }
+
+        .detail-box strong {
+            overflow-wrap: anywhere;
+        }
+
+        #status {
+            padding: 18px;
+            background: white;
+            border-radius: 10px;
+            color: #64748b;
+        }
+
+        .error {
+            color: #dc2626 !important;
+        }
+
+        .business-logo {
+            max-width: 120px;
+            max-height: 80px;
+            object-fit: contain;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h2>LocalBiz</h2>
+        <button class="logout-button" id="logoutButton">
+            Sign Out
+        </button>
+    </header>
+
+    <main>
+
+        <div class="welcome">
+            <h1>Business Dashboard</h1>
+            <p id="userEmail">Loading account...</p>
+        </div>
+
+        <div id="status" role="status">
+            Loading your business information...
+        </div>
+
+        <section class="business-card" id="businessCard" hidden>
+
+            <img
+                id="businessLogo"
+                class="business-logo"
+                alt="Business logo"
+                hidden
+            >
+
+            <h2 id="businessName"></h2>
+
+            <p id="businessDescription"></p>
+
+            <div class="details">
+
+                <div class="detail-box">
+                    <small>Business Type</small>
+                    <strong id="businessType"></strong>
+                </div>
+
+                <div class="detail-box">
+                    <small>Your Role</small>
+                    <strong id="businessRole"></strong>
+                </div>
+
+                <div class="detail-box">
+                    <small>Business Slug</small>
+                    <strong id="businessSlug"></strong>
+                </div>
+
+                <div class="detail-box">
+                    <small>Business Status</small>
+                    <strong id="businessStatus"></strong>
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./supabase-config.js"></script>
+
+    <script>
+        const supabase = window.localBizSupabase;
+
+        const statusElement = document.getElementById("status");
+        const businessCard = document.getElementById("businessCard");
+
+        function showStatus(message, isError = false) {
+            statusElement.hidden = false;
+            statusElement.textContent = message;
+            statusElement.className = isError ? "error" : "";
+        }
+
+        async function loadBusinessDashboard() {
+
+            // 1. Verify login session.
+
+            const { data: sessionData, error: sessionError } =
+                await supabase.auth.getSession();
+
+            if (sessionError || !sessionData.session) {
+                window.location.replace("./index.html");
+                return;
+            }
+
+            const user = sessionData.session.user;
+
+            document.getElementById("userEmail").textContent =
+                "Logged in as " + user.email;
+
+            // 2. Find active business memberships for this user.
+
+            const { data: memberships, error: membershipError } =
+                await supabase
+                    .from("business_users")
+                    .select("business_id, role, is_active")
+                    .eq("user_id", user.id)
+                    .eq("is_active", true);
+
+            if (membershipError) {
+                showStatus(
+                    "Unable to load your business membership: " +
+                    membershipError.message,
+                    true
+                );
+                return;
+            }
+
+            if (!memberships || memberships.length === 0) {
+                showStatus(
+                    "No active business membership was found for this account.",
+                    true
+                );
+                return;
+            }
+
+            if (memberships.length > 1) {
+                showStatus(
+                    "This account belongs to multiple businesses. " +
+                    "A business selector will be added in a future version.",
+                    true
+                );
+                return;
+            }
+
+            const membership = memberships[0];
+
+            // 3. Load only the business linked to this membership.
+
+            const { data: business, error: businessError } =
+                await supabase
+                    .from("businesses")
+                    .select(
+                        "id, business_name, slug, business_type, " +
+                        "description, logo_url, status"
+                    )
+                    .eq("id", membership.business_id)
+                    .maybeSingle();
+
+            if (businessError || !business) {
+                showStatus(
+                    "Unable to load your business information: " +
+                    (businessError ? businessError.message : "Business not found."),
+                    true
+                );
+                return;
+            }
+
+            // 4. Display business details.
+
+            document.getElementById("businessName").textContent =
+                business.business_name;
+
+            document.getElementById("businessDescription").textContent =
+                business.description || "Welcome to your business dashboard.";
+
+            document.getElementById("businessType").textContent =
+                business.business_type || "Not specified";
+
+            document.getElementById("businessRole").textContent =
+                membership.role;
+
+            document.getElementById("businessSlug").textContent =
+                business.slug;
+
+            document.getElementById("businessStatus").textContent =
+                business.status;
+
+            if (business.logo_url) {
+                const logo = document.getElementById("businessLogo");
+                logo.src = business.logo_url;
+                logo.hidden = false;
+            }
+
+            statusElement.hidden = true;
+            businessCard.hidden = false;
+        }
+
+        // 5. Sign out.
+
+        document.getElementById("logoutButton")
+            .addEventListener("click", async function() {
+
+                const { error } = await supabase.auth.signOut();
+
+                if (error) {
+                    showStatus("Sign out failed: " + error.message, true);
+                    return;
+                }
+
+                window.location.replace("./index.html");
+            });
+
+        loadBusinessDashboard();
+    </script>
+
+</body>
+</html>
