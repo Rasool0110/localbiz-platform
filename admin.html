@@ -175,22 +175,23 @@
     <script src="./supabase-config.js"></script>
 
 
+
 <script>
     const localBizClient = window.localBizSupabase;
 
-    const accountInfo = document.getElementById("accountInfo");
-    const businessInfo = document.getElementById("businessInfo");
+    // HTML elements
+    const userEmail = document.getElementById("userEmail");
+    const statusElement = document.getElementById("status");
+    const businessCard = document.getElementById("businessCard");
     const logoutButton = document.getElementById("logoutButton");
 
     async function loadDashboard() {
         try {
-            // Get logged-in user session.
+            // Check logged-in session
             const { data: sessionData, error: sessionError } =
                 await localBizClient.auth.getSession();
 
-            if (sessionError) {
-                throw sessionError;
-            }
+            if (sessionError) throw sessionError;
 
             const session = sessionData.session;
 
@@ -201,9 +202,9 @@
 
             const user = session.user;
 
-            accountInfo.textContent = "Logged in as: " + user.email;
+            userEmail.textContent = "Logged in as: " + user.email;
 
-            // Find the active business membership for this user.
+            // Get active business membership
             const { data: memberships, error: membershipError } =
                 await localBizClient
                     .from("business_users")
@@ -211,25 +212,23 @@
                     .eq("user_id", user.id)
                     .eq("is_active", true);
 
-            if (membershipError) {
-                throw membershipError;
-            }
+            if (membershipError) throw membershipError;
 
             if (!memberships || memberships.length === 0) {
-                businessInfo.textContent =
+                statusElement.textContent =
                     "No active business membership found for this account.";
                 return;
             }
 
             if (memberships.length > 1) {
-                businessInfo.textContent =
+                statusElement.textContent =
                     "Multiple business memberships found. Business selection will be added later.";
                 return;
             }
 
             const membership = memberships[0];
 
-            // Retrieve the business associated with the membership.
+            // Get business information
             const { data: business, error: businessError } =
                 await localBizClient
                     .from("businesses")
@@ -237,33 +236,58 @@
                     .eq("id", membership.business_id)
                     .maybeSingle();
 
-            if (businessError) {
-                throw businessError;
-            }
+            if (businessError) throw businessError;
 
             if (!business) {
-                businessInfo.textContent =
+                statusElement.textContent =
                     "Business details could not be found.";
                 return;
             }
 
-            businessInfo.innerHTML = `
-                <h2>${business.business_name}</h2>
-                <p><strong>Business Type:</strong> ${business.business_type || "Not set"}</p>
-                <p><strong>Role:</strong> ${membership.role}</p>
-                <p><strong>Business Slug:</strong> ${business.slug}</p>
-                <p><strong>Status:</strong> ${business.status}</p>
-            `;
+            // Display business information
+            document.getElementById("businessName").textContent =
+                business.business_name || "Not set";
+
+            document.getElementById("businessDescription").textContent =
+                business.description || "No description available.";
+
+            document.getElementById("businessType").textContent =
+                business.business_type || "Not set";
+
+            document.getElementById("businessRole").textContent =
+                membership.role || "Not set";
+
+            document.getElementById("businessSlug").textContent =
+                business.slug || "Not set";
+
+            document.getElementById("businessStatus").textContent =
+                business.status || "Not set";
+
+            // Display business logo if available
+            const logo = document.getElementById("businessLogo");
+
+            if (business.logo_url) {
+                logo.src = business.logo_url;
+                logo.hidden = false;
+            } else {
+                logo.hidden = true;
+            }
+
+            // Show dashboard card
+            businessCard.hidden = false;
+            statusElement.hidden = true;
 
         } catch (error) {
             console.error("Dashboard loading error:", error);
 
-            businessInfo.textContent =
+            statusElement.textContent =
                 "Unable to load business information: " + error.message;
+
+            statusElement.classList.add("error");
         }
     }
 
-    // Sign out the current user.
+    // Sign out
     logoutButton.addEventListener("click", async function() {
         logoutButton.disabled = true;
         logoutButton.textContent = "Signing out...";
@@ -271,25 +295,28 @@
         try {
             const { error } = await localBizClient.auth.signOut();
 
-            if (error) {
-                throw error;
-            }
+            if (error) throw error;
 
             window.location.href = "./index.html";
 
         } catch (error) {
             console.error("Sign out error:", error);
-            businessInfo.textContent =
+
+            statusElement.hidden = false;
+            statusElement.textContent =
                 "Sign out failed: " + error.message;
+
+            statusElement.classList.add("error");
 
             logoutButton.disabled = false;
             logoutButton.textContent = "Sign Out";
         }
     });
 
-    // Load dashboard information.
+    // Initialize dashboard
     loadDashboard();
 </script>
+
 
 
 </body>
