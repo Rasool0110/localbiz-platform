@@ -174,140 +174,123 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="./supabase-config.js"></script>
 
-    <script>
-        const supabase = window.localBizSupabase;
 
-        const statusElement = document.getElementById("status");
-        const businessCard = document.getElementById("businessCard");
+<script>
+    const localBizClient = window.localBizSupabase;
 
-        function showStatus(message, isError = false) {
-            statusElement.hidden = false;
-            statusElement.textContent = message;
-            statusElement.className = isError ? "error" : "";
-        }
+    const accountInfo = document.getElementById("accountInfo");
+    const businessInfo = document.getElementById("businessInfo");
+    const logoutButton = document.getElementById("logoutButton");
 
-        async function loadBusinessDashboard() {
-
-            // 1. Verify login session.
-
+    async function loadDashboard() {
+        try {
+            // Get logged-in user session.
             const { data: sessionData, error: sessionError } =
-                await supabase.auth.getSession();
+                await localBizClient.auth.getSession();
 
-            if (sessionError || !sessionData.session) {
-                window.location.replace("./index.html");
+            if (sessionError) {
+                throw sessionError;
+            }
+
+            const session = sessionData.session;
+
+            if (!session) {
+                window.location.href = "./index.html";
                 return;
             }
 
-            const user = sessionData.session.user;
+            const user = session.user;
 
-            document.getElementById("userEmail").textContent =
-                "Logged in as " + user.email;
+            accountInfo.textContent = "Logged in as: " + user.email;
 
-            // 2. Find active business memberships for this user.
-
+            // Find the active business membership for this user.
             const { data: memberships, error: membershipError } =
-                await supabase
+                await localBizClient
                     .from("business_users")
                     .select("business_id, role, is_active")
                     .eq("user_id", user.id)
                     .eq("is_active", true);
 
             if (membershipError) {
-                showStatus(
-                    "Unable to load your business membership: " +
-                    membershipError.message,
-                    true
-                );
-                return;
+                throw membershipError;
             }
 
             if (!memberships || memberships.length === 0) {
-                showStatus(
-                    "No active business membership was found for this account.",
-                    true
-                );
+                businessInfo.textContent =
+                    "No active business membership found for this account.";
                 return;
             }
 
             if (memberships.length > 1) {
-                showStatus(
-                    "This account belongs to multiple businesses. " +
-                    "A business selector will be added in a future version.",
-                    true
-                );
+                businessInfo.textContent =
+                    "Multiple business memberships found. Business selection will be added later.";
                 return;
             }
 
             const membership = memberships[0];
 
-            // 3. Load only the business linked to this membership.
-
+            // Retrieve the business associated with the membership.
             const { data: business, error: businessError } =
-                await supabase
+                await localBizClient
                     .from("businesses")
-                    .select(
-                        "id, business_name, slug, business_type, " +
-                        "description, logo_url, status"
-                    )
+                    .select("id, business_name, slug, business_type, description, logo_url, status")
                     .eq("id", membership.business_id)
                     .maybeSingle();
 
-            if (businessError || !business) {
-                showStatus(
-                    "Unable to load your business information: " +
-                    (businessError ? businessError.message : "Business not found."),
-                    true
-                );
+            if (businessError) {
+                throw businessError;
+            }
+
+            if (!business) {
+                businessInfo.textContent =
+                    "Business details could not be found.";
                 return;
             }
 
-            // 4. Display business details.
+            businessInfo.innerHTML = `
+                <h2>${business.business_name}</h2>
+                <p><strong>Business Type:</strong> ${business.business_type || "Not set"}</p>
+                <p><strong>Role:</strong> ${membership.role}</p>
+                <p><strong>Business Slug:</strong> ${business.slug}</p>
+                <p><strong>Status:</strong> ${business.status}</p>
+            `;
 
-            document.getElementById("businessName").textContent =
-                business.business_name;
+        } catch (error) {
+            console.error("Dashboard loading error:", error);
 
-            document.getElementById("businessDescription").textContent =
-                business.description || "Welcome to your business dashboard.";
+            businessInfo.textContent =
+                "Unable to load business information: " + error.message;
+        }
+    }
 
-            document.getElementById("businessType").textContent =
-                business.business_type || "Not specified";
+    // Sign out the current user.
+    logoutButton.addEventListener("click", async function() {
+        logoutButton.disabled = true;
+        logoutButton.textContent = "Signing out...";
 
-            document.getElementById("businessRole").textContent =
-                membership.role;
+        try {
+            const { error } = await localBizClient.auth.signOut();
 
-            document.getElementById("businessSlug").textContent =
-                business.slug;
-
-            document.getElementById("businessStatus").textContent =
-                business.status;
-
-            if (business.logo_url) {
-                const logo = document.getElementById("businessLogo");
-                logo.src = business.logo_url;
-                logo.hidden = false;
+            if (error) {
+                throw error;
             }
 
-            statusElement.hidden = true;
-            businessCard.hidden = false;
+            window.location.href = "./index.html";
+
+        } catch (error) {
+            console.error("Sign out error:", error);
+            businessInfo.textContent =
+                "Sign out failed: " + error.message;
+
+            logoutButton.disabled = false;
+            logoutButton.textContent = "Sign Out";
         }
+    });
 
-        // 5. Sign out.
+    // Load dashboard information.
+    loadDashboard();
+</script>
 
-        document.getElementById("logoutButton")
-            .addEventListener("click", async function() {
-
-                const { error } = await supabase.auth.signOut();
-
-                if (error) {
-                    showStatus("Sign out failed: " + error.message, true);
-                    return;
-                }
-
-                window.location.replace("./index.html");
-            });
-
-        loadBusinessDashboard();
-    </script>
 
 </body>
 </html>
