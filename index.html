@@ -145,21 +145,23 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="./supabase-config.js"></script>
 
-    <script>
-        const supabase = window.localBizSupabase;
+    
+<script>
+    const localBizClient = window.localBizSupabase;
 
-        const loginForm = document.getElementById("loginForm");
-        const loginButton = document.getElementById("loginButton");
-        const message = document.getElementById("message");
+    const loginForm = document.getElementById("loginForm");
+    const loginButton = document.getElementById("loginButton");
+    const message = document.getElementById("message");
 
-        function showMessage(text, type) {
-            message.textContent = text;
-            message.className = type;
-        }
+    function showMessage(text, type) {
+        message.textContent = text;
+        message.className = type;
+    }
 
-        // If the user is already logged in, open the dashboard.
-        async function checkExistingSession() {
-            const { data, error } = await supabase.auth.getSession();
+    // Check whether the user is already logged in.
+    async function checkExistingSession() {
+        try {
+            const { data, error } = await localBizClient.auth.getSession();
 
             if (error) {
                 showMessage(error.message, "error");
@@ -169,41 +171,54 @@
             if (data.session) {
                 window.location.href = "./admin.html";
             }
+        } catch (error) {
+            showMessage(error.message, "error");
         }
+    }
 
-        loginForm.addEventListener("submit", async function(event) {
+    // Handle login form submission.
+    loginForm.addEventListener("submit", async function(event) {
+        event.preventDefault();
 
-            event.preventDefault();
+        loginButton.disabled = true;
+        loginButton.textContent = "Signing in...";
 
-            loginButton.disabled = true;
-            loginButton.textContent = "Signing in...";
+        showMessage("", "");
 
-            showMessage("", "");
+        const email = document.getElementById("email").value.trim();
+        const password = document.getElementById("password").value;
 
-            const email = document.getElementById("email").value.trim();
-            const password = document.getElementById("password").value;
-
-            const { data, error } = await supabase.auth.signInWithPassword({
+        try {
+            const { data, error } = await localBizClient.auth.signInWithPassword({
                 email: email,
                 password: password
             });
 
             if (error) {
                 showMessage(error.message, "error");
-                loginButton.disabled = false;
-                loginButton.textContent = "Sign In";
                 return;
             }
 
             if (data.session) {
                 showMessage("Login successful. Opening dashboard...", "success");
+
                 window.location.href = "./admin.html";
+            } else {
+                showMessage("Login failed. Please try again.", "error");
             }
 
-        });
+        } catch (error) {
+            showMessage("Login error: " + error.message, "error");
 
-        checkExistingSession();
-    </script>
+        } finally {
+            loginButton.disabled = false;
+            loginButton.textContent = "Sign In";
+        }
+    });
+
+    // Run session check when the page loads.
+    checkExistingSession();
+</script>
 
 </body>
 </html>
