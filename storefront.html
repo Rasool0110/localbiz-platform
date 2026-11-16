@@ -1,0 +1,491 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LocalBiz Storefront</title>
+
+  <style>
+    :root {
+      --primary: #2563eb;
+      --secondary: #eff6ff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --surface: #ffffff;
+      --background: #f8fafc;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: var(--background);
+      color: var(--text);
+    }
+
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .header-inner {
+      max-width: 1150px;
+      margin: auto;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .logo {
+      width: 58px;
+      height: 58px;
+      border-radius: 12px;
+      object-fit: cover;
+      display: none;
+    }
+
+    .business-name {
+      font-size: 24px;
+      font-weight: 700;
+      margin: 0;
+    }
+
+    .business-description {
+      margin: 5px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .hero {
+      max-width: 1150px;
+      margin: 20px auto;
+      padding: 0 20px;
+    }
+
+    .hero img {
+      width: 100%;
+      max-height: 300px;
+      object-fit: cover;
+      border-radius: 16px;
+      display: none;
+    }
+
+    .hero h2 {
+      font-size: 25px;
+      margin: 15px 0 6px;
+    }
+
+    .hero p {
+      color: var(--muted);
+      margin: 0;
+    }
+
+    main {
+      max-width: 1150px;
+      margin: auto;
+      padding: 10px 20px 50px;
+    }
+
+    .section-title {
+      font-size: 21px;
+      margin: 20px 0 14px;
+    }
+
+    .category-list {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      padding: 4px 0 14px;
+      scrollbar-width: thin;
+    }
+
+    .category-button {
+      border: 1px solid #e5e7eb;
+      border-radius: 30px;
+      padding: 10px 18px;
+      background: white;
+      color: var(--text);
+      white-space: nowrap;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .category-button.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+
+    .search {
+      width: 100%;
+      max-width: 420px;
+      padding: 12px 15px;
+      border: 1px solid #d1d5db;
+      border-radius: 10px;
+      font-size: 15px;
+      margin: 8px 0 20px;
+    }
+
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .product-card {
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 13px;
+      overflow: hidden;
+    }
+
+    .product-image {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      object-fit: cover;
+      background: #f1f5f9;
+      display: block;
+    }
+
+    .product-info {
+      padding: 13px;
+    }
+
+    .product-name {
+      font-size: 16px;
+      font-weight: 600;
+      margin: 0 0 7px;
+    }
+
+    .product-description {
+      color: var(--muted);
+      font-size: 13px;
+      margin: 0 0 10px;
+      line-height: 1.5;
+    }
+
+    .product-price {
+      font-weight: 700;
+      color: var(--primary);
+      font-size: 16px;
+    }
+
+    .message {
+      padding: 30px 10px;
+      text-align: center;
+      color: var(--muted);
+    }
+
+    footer {
+      padding: 22px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    @media (max-width: 850px) {
+      .product-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 600px) {
+      .product-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 11px;
+      }
+
+      .header-inner { padding: 13px 15px; }
+      .business-name { font-size: 20px; }
+      .product-info { padding: 10px; }
+      .product-name { font-size: 14px; }
+      main { padding-left: 14px; padding-right: 14px; }
+      .hero { padding: 0 14px; }
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <div class="header-inner">
+    <img id="businessLogo" class="logo" alt="Business logo">
+    <div>
+      <h1 id="businessName" class="business-name">Loading store...</h1>
+      <p id="businessDescription" class="business-description"></p>
+    </div>
+  </div>
+</header>
+
+<section class="hero">
+  <img id="businessBanner" alt="Store banner">
+  <h2 id="heroTitle"></h2>
+  <p id="heroSubtitle"></p>
+</section>
+
+<main>
+  <h2 class="section-title">Browse Categories</h2>
+  <div id="categoryList" class="category-list"></div>
+
+  <h2 class="section-title">Our Products</h2>
+  <input
+    id="productSearch"
+    class="search"
+    type="search"
+    placeholder="Search products..."
+  >
+
+  <div id="productGrid" class="product-grid"></div>
+  <div id="statusMessage" class="message">Loading products...</div>
+</main>
+
+<footer>
+  Powered by LocalBiz
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="./supabase-config.js"></script>
+
+<script>
+const localBizClient = window.localBizSupabase;
+
+let currentBusiness = null;
+let allProducts = [];
+let selectedCategory = "all";
+let showPrices = true;
+
+const businessName = document.getElementById("businessName");
+const businessDescription = document.getElementById("businessDescription");
+const businessLogo = document.getElementById("businessLogo");
+const businessBanner = document.getElementById("businessBanner");
+const heroTitle = document.getElementById("heroTitle");
+const heroSubtitle = document.getElementById("heroSubtitle");
+const categoryList = document.getElementById("categoryList");
+const productGrid = document.getElementById("productGrid");
+const statusMessage = document.getElementById("statusMessage");
+const productSearch = document.getElementById("productSearch");
+
+function safeImage(element, url) {
+  if (!url) return;
+
+  try {
+    const parsed = new URL(url);
+    if (!["https:", "http:"].includes(parsed.protocol)) return;
+
+    element.src = parsed.href;
+    element.style.display = "block";
+  } catch {
+    // Ignore invalid image URLs.
+  }
+}
+
+function applyTheme(color, secondaryColor) {
+  const validHex = /^#[0-9a-fA-F]{6}$/;
+
+  if (validHex.test(color || "")) {
+    document.documentElement.style.setProperty("--primary", color);
+  }
+
+  if (validHex.test(secondaryColor || "")) {
+    document.documentElement.style.setProperty("--secondary", secondaryColor);
+  }
+}
+
+async function loadBusiness() {
+  const params = new URLSearchParams(window.location.search);
+  const slug = params.get("store");
+
+  if (!slug) {
+    throw new Error("Store not specified. Please provide a store slug in the URL.");
+  }
+
+  const { data, error } = await localBizClient
+    .from("businesses")
+    .select("id,business_name,slug,business_type,description,logo_url,banner_url,status")
+    .eq("slug", slug)
+    .eq("status", "active")
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) throw new Error("Store not found or inactive.");
+
+  currentBusiness = data;
+
+  businessName.textContent = data.business_name;
+  businessDescription.textContent = data.description || data.business_type || "";
+
+  safeImage(businessLogo, data.logo_url);
+  safeImage(businessBanner, data.banner_url);
+
+  document.title = data.business_name + " | Storefront";
+}
+
+async function loadSettings() {
+  const { data, error } = await localBizClient
+    .from("site_settings")
+    .select("theme_color,secondary_color,hero_title,hero_subtitle,show_prices")
+    .eq("business_id", currentBusiness.id)
+    .maybeSingle();
+
+  if (error) throw error;
+
+  if (data) {
+    applyTheme(data.theme_color, data.secondary_color);
+    heroTitle.textContent = data.hero_title || "";
+    heroSubtitle.textContent = data.hero_subtitle || "";
+    showPrices = data.show_prices !== false;
+  }
+}
+
+async function loadCategories() {
+  const { data, error } = await localBizClient
+    .from("categories")
+    .select("id,category_name,display_order")
+    .eq("business_id", currentBusiness.id)
+    .eq("is_published", true)
+    .order("display_order", { ascending: true });
+
+  if (error) throw error;
+
+  categoryList.replaceChildren();
+
+  addCategoryButton("All Products", "all");
+
+  (data || []).forEach(category => {
+    addCategoryButton(category.category_name, category.id);
+  });
+}
+
+function addCategoryButton(label, categoryId) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "category-button";
+  button.textContent = label;
+
+  if (categoryId === selectedCategory) {
+    button.classList.add("active");
+  }
+
+  button.addEventListener("click", () => {
+    selectedCategory = categoryId;
+
+    document.querySelectorAll(".category-button").forEach(item => {
+      item.classList.remove("active");
+    });
+
+    button.classList.add("active");
+    renderProducts();
+  });
+
+  categoryList.appendChild(button);
+}
+
+async function loadProducts() {
+  const { data, error } = await localBizClient
+    .from("products")
+    .select("id,category_id,product_name,description,product_image_url,price,selling_price,product_type,display_order")
+    .eq("business_id", currentBusiness.id)
+    .eq("is_published", true)
+    .order("display_order", { ascending: true });
+
+  if (error) throw error;
+
+  allProducts = data || [];
+  renderProducts();
+}
+
+function renderProducts() {
+  productGrid.replaceChildren();
+
+  const searchText = productSearch.value.trim().toLowerCase();
+
+  const filteredProducts = allProducts.filter(product => {
+    const matchesCategory =
+      selectedCategory === "all" ||
+      product.category_id === selectedCategory;
+
+    const matchesSearch =
+      (product.product_name || "").toLowerCase().includes(searchText) ||
+      (product.description || "").toLowerCase().includes(searchText);
+
+    return matchesCategory && matchesSearch;
+  });
+
+  if (filteredProducts.length === 0) {
+    statusMessage.textContent = "No products found.";
+    statusMessage.style.display = "block";
+    return;
+  }
+
+  statusMessage.style.display = "none";
+
+  filteredProducts.forEach(product => {
+    const card = document.createElement("article");
+    card.className = "product-card";
+
+    const image = document.createElement("img");
+    image.className = "product-image";
+    image.alt = product.product_name || "Product";
+    image.loading = "lazy";
+
+    safeImage(image, product.product_image_url);
+
+    const info = document.createElement("div");
+    info.className = "product-info";
+
+    const name = document.createElement("h3");
+    name.className = "product-name";
+    name.textContent = product.product_name || "";
+
+    info.appendChild(name);
+
+    if (product.description) {
+      const description = document.createElement("p");
+      description.className = "product-description";
+      description.textContent = product.description;
+      info.appendChild(description);
+    }
+
+    if (showPrices) {
+      const priceValue =
+        product.selling_price !== null &&
+        product.selling_price !== undefined
+          ? product.selling_price
+          : product.price;
+
+      const price = document.createElement("div");
+      price.className = "product-price";
+      price.textContent = "₹" + Number(priceValue).toLocaleString("en-IN");
+      info.appendChild(price);
+    }
+
+    card.appendChild(image);
+    card.appendChild(info);
+    productGrid.appendChild(card);
+  });
+}
+
+productSearch.addEventListener("input", renderProducts);
+
+async function initializeStorefront() {
+  try {
+    await loadBusiness();
+    await loadSettings();
+    await loadCategories();
+    await loadProducts();
+  } catch (error) {
+    console.error("Storefront loading error:", error);
+    statusMessage.textContent =
+      error.message || "Unable to load this storefront.";
+    statusMessage.style.display = "block";
+  }
+}
+
+initializeStorefront();
+</script>
+
+</body>
+</html>
