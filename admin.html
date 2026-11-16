@@ -1731,6 +1731,11 @@ filteredProducts.forEach(product => {
         productsList.appendChild(card);
     });
 }
+// Category and product search listeners
+categorySearch.addEventListener("input", renderCategories);
+productSearch.addEventListener("input", renderProducts);
+
+// Product form submission
 
 productForm.addEventListener("submit", async event => {
     event.preventDefault();
@@ -1745,8 +1750,7 @@ productForm.addEventListener("submit", async event => {
         : Number(sellingPriceInput);
     const order = Number(productDisplayOrder.value);
     const file = productImage.files[0];
-    categorySearch.addEventListener("input", renderCategories);
-    productSearch.addEventListener("input", renderProducts);
+    
 
     if (!name || !slug) {
         showMessage(productMessage, "Enter a valid product name.", "error");
