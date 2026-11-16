@@ -1939,8 +1939,10 @@ async function loadStoreAppearance() {
 // DASHBOARD AND AUTHENTICATION
 // --------------------------------------------------
 
+
 async function loadDashboard() {
     try {
+        // 1. Check the logged-in session
         const { data: sessionData, error: sessionError } =
             await localBizClient.auth.getSession();
 
@@ -1955,6 +1957,7 @@ async function loadDashboard() {
 
         userEmail.textContent = "Logged in as: " + session.user.email;
 
+        // 2. Find the user's active business membership
         const { data: memberships, error: membershipError } =
             await localBizClient
                 .from("business_users")
@@ -1964,8 +1967,9 @@ async function loadDashboard() {
 
         if (membershipError) throw membershipError;
 
-        if (!memberships?.length) {
-            statusElement.textContent = "No active business membership found.";
+        if (!memberships || memberships.length === 0) {
+            statusElement.textContent =
+                "No active business membership found.";
             return;
         }
 
@@ -1975,34 +1979,32 @@ async function loadDashboard() {
             return;
         }
 
+        // 3. Store membership details
         const membership = memberships[0];
 
         currentBusinessId = membership.business_id;
         currentBusinessRole = membership.role;
-        if (businessError) throw businessError;
-if (!business) throw new Error("Business details could not be found.");
-        currentBusinessData = business;
 
-const { data: business, error: businessError } =
-    await localBizClient
-        .from("businesses")
-        .select("id,business_name,slug,business_type,description,logo_url,banner_url,status")
-        .eq("id", currentBusinessId)
-        .maybeSingle();
-
-if (businessError) throw businessError;
-if (!business) throw new Error("Business details could not be found.");
-
-currentBusinessData = business;
+        // 4. Fetch business details ONCE
+        const { data: business, error: businessError } =
             await localBizClient
                 .from("businesses")
-                .select("id,business_name,slug,business_type,description,logo_url,banner_url,status")
+                .select(
+                    "id,business_name,slug,business_type,description,logo_url,banner_url,status"
+                )
                 .eq("id", currentBusinessId)
                 .maybeSingle();
 
         if (businessError) throw businessError;
-        if (!business) throw new Error("Business details could not be found.");
 
+        if (!business) {
+            throw new Error("Business details could not be found.");
+        }
+
+        // 5. Store business details after the query succeeds
+        currentBusinessData = business;
+
+        // 6. Display business information
         document.getElementById("businessName").textContent =
             business.business_name || "Not set";
 
@@ -2021,6 +2023,7 @@ currentBusinessData = business;
         document.getElementById("businessStatus").textContent =
             business.status || "Not set";
 
+        // 7. Display business logo
         const logo = document.getElementById("businessLogo");
 
         if (business.logo_url && validImageUrl(business.logo_url)) {
@@ -2031,27 +2034,34 @@ currentBusinessData = business;
             logo.removeAttribute("src");
         }
 
+        // 8. Show dashboard sections
         businessCard.hidden = false;
         statusElement.hidden = true;
 
+        categorySection.hidden = false;
         productSection.hidden = false;
-categorySection.hidden = false;
-// Appearance editing requires an owner/admin account.
-const canManageAppearance =
-    ["owner", "admin"].includes(currentBusinessRole);
 
-appearanceSection.hidden = !canManageAppearance;
+        // 9. Load appearance tools for owners and admins only
+        const canManageAppearance =
+            ["owner", "admin"].includes(currentBusinessRole);
 
-if (canManageAppearance) {
-    await loadStoreAppearance();
-}
+        appearanceSection.hidden = !canManageAppearance;
+
+        if (canManageAppearance) {
+            await loadStoreAppearance();
+        }
+
+        // 10. Load categories and products
         await loadCategories();
         await loadProducts();
 
     } catch (error) {
         console.error("Dashboard loading error:", error);
+
         statusElement.hidden = false;
-        statusElement.textContent = "Unable to load dashboard: " + error.message;
+        statusElement.textContent =
+            "Unable to load dashboard: " + error.message;
+
         statusElement.classList.add("error");
     }
 }
