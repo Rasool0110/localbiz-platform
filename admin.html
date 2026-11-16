@@ -383,7 +383,85 @@ html {
     <a href="#categorySection">Categories</a>
     <a href="#productSection">Products</a>
     <a href="#appearanceSection">Store Appearance</a>
+    <a href="#branchSection" id="branchNavLink" hidden>Branches</a>
 </nav>
+    
+<!-- BRANCH MANAGEMENT -->
+
+<section class="management-section" id="branchSection" hidden>
+    <h2>Branch Management</h2>
+    <p>Add and manage the physical branches of your business.</p>
+
+    <h3 id="branchFormTitle">Add New Branch</h3>
+
+    <form id="branchForm" class="form-grid">
+
+        <div>
+            <label for="branchName">Branch Name *</label>
+            <input type="text" id="branchName"
+                maxlength="120" required
+                placeholder="Example: Vijayawada Main Branch">
+        </div>
+
+        <div>
+            <label for="branchCode">Branch Code</label>
+            <input type="text" id="branchCode"
+                maxlength="30"
+                placeholder="Example: VJA01">
+        </div>
+
+        <div>
+            <label for="branchContact">Contact Number</label>
+            <input type="tel" id="branchContact"
+                maxlength="30">
+        </div>
+
+        <div>
+            <label for="branchEmail">Email</label>
+            <input type="email" id="branchEmail"
+                maxlength="255">
+        </div>
+
+        <div class="full-width">
+            <label for="branchAddress">Address</label>
+            <textarea id="branchAddress" rows="2"></textarea>
+        </div>
+
+        <div>
+            <label for="branchCity">City</label>
+            <input type="text" id="branchCity" maxlength="100">
+        </div>
+
+        <div>
+            <label for="branchState">State</label>
+            <input type="text" id="branchState" maxlength="100">
+        </div>
+
+        <div class="full-width form-actions">
+            <button type="submit" class="primary-button"
+                id="saveBranchButton">
+                Add Branch
+            </button>
+
+            <button type="button" class="secondary-button"
+                id="cancelBranchEditButton" hidden>
+                Cancel Edit
+            </button>
+        </div>
+
+    </form>
+
+    <div id="branchMessage" class="message" role="status"></div>
+
+    <hr>
+
+    <h3>Your Branches</h3>
+
+    <div id="branchesList" class="item-grid">
+        Loading branches...
+    </div>
+</section>
+
 
 <!-- STORE APPEARANCE -->
 
@@ -719,6 +797,8 @@ if (!localBizClient) {
 // Dashboard state
 
 let currentBusinessId = null;
+let editingBranchId = null;
+let allBranches = [];
 let currentBusinessRole = null;
 let editingCategoryId = null;
 let editingProductId = null;
@@ -732,7 +812,27 @@ const userEmail = document.getElementById("userEmail");
 const statusElement = document.getElementById("status");
 const businessCard = document.getElementById("businessCard");
 const logoutButton = document.getElementById("logoutButton");
+// Branch elements
 
+const branchSection = document.getElementById("branchSection");
+const branchNavLink = document.getElementById("branchNavLink");
+
+const branchForm = document.getElementById("branchForm");
+const branchName = document.getElementById("branchName");
+const branchCode = document.getElementById("branchCode");
+const branchContact = document.getElementById("branchContact");
+const branchEmail = document.getElementById("branchEmail");
+const branchAddress = document.getElementById("branchAddress");
+const branchCity = document.getElementById("branchCity");
+const branchState = document.getElementById("branchState");
+
+const branchFormTitle = document.getElementById("branchFormTitle");
+const saveBranchButton = document.getElementById("saveBranchButton");
+const cancelBranchEditButton =
+    document.getElementById("cancelBranchEditButton");
+
+const branchMessage = document.getElementById("branchMessage");
+const branchesList = document.getElementById("branchesList");
 // Category elements
 
 const categorySection = document.getElementById("categorySection");
@@ -847,7 +947,297 @@ function createButton(label, className, callback) {
     button.className = className;
     button.addEventListener("click", callback);
     return button;
+} 
+// --------------------------------------------------
+// BRANCH MANAGEMENT
+// --------------------------------------------------
+
+function resetBranchForm() {
+    branchForm.reset();
+
+    editingBranchId = null;
+
+    branchFormTitle.textContent = "Add New Branch";
+    saveBranchButton.textContent = "Add Branch";
+    cancelBranchEditButton.hidden = true;
+
+    showMessage(branchMessage, "");
 }
+
+async function loadBranches() {
+    branchesList.textContent = "Loading branches...";
+
+    const { data, error } = await localBizClient
+        .from("business_branches")
+        .select(`
+            id,
+            branch_name,
+            branch_code,
+            contact_number,
+            email,
+            address,
+            city,
+            state,
+            is_active
+        `)
+        .eq("business_id", currentBusinessId)
+        .order("branch_name", { ascending: true });
+
+    if (error) throw error;
+
+    allBranches = data || [];
+    renderBranches();
+}
+
+function renderBranches() {
+    branchesList.replaceChildren();
+
+    if (allBranches.length === 0) {
+        branchesList.textContent = "No branches found.";
+        return;
+    }
+
+    allBranches.forEach(branch => {
+        const card = document.createElement("div");
+        card.className = "item-card";
+
+        const heading = document.createElement("h3");
+        heading.textContent = branch.branch_name;
+        card.appendChild(heading);
+
+        const code = document.createElement("p");
+        code.textContent = "Branch Code: " +
+            (branch.branch_code || "Not set");
+        card.appendChild(code);
+
+        const address = document.createElement("p");
+        address.textContent = [
+            branch.address,
+            branch.city,
+            branch.state
+        ].filter(Boolean).join(", ") || "Address not provided";
+
+        card.appendChild(address);
+
+        const contact = document.createElement("p");
+        contact.textContent = "Contact: " +
+            (branch.contact_number || "Not provided");
+        card.appendChild(contact);
+
+        const email = document.createElement("p");
+        email.textContent = "Email: " +
+            (branch.email || "Not provided");
+        card.appendChild(email);
+
+        const status = document.createElement("p");
+        status.textContent = branch.is_active
+            ? "Status: Active"
+            : "Status: Inactive";
+
+        card.appendChild(status);
+
+        const actions = document.createElement("div");
+        actions.className = "item-actions";
+
+        actions.appendChild(createButton(
+            "Edit",
+            "secondary-button",
+            () => editBranch(branch)
+        ));
+
+        actions.appendChild(createButton(
+            branch.is_active ? "Deactivate" : "Activate",
+            "secondary-button",
+            () => toggleBranchStatus(branch)
+        ));
+
+        card.appendChild(actions);
+        branchesList.appendChild(card);
+    });
+}
+
+function editBranch(branch) {
+    editingBranchId = branch.id;
+
+    branchName.value = branch.branch_name || "";
+    branchCode.value = branch.branch_code || "";
+    branchContact.value = branch.contact_number || "";
+    branchEmail.value = branch.email || "";
+    branchAddress.value = branch.address || "";
+    branchCity.value = branch.city || "";
+    branchState.value = branch.state || "";
+
+    branchFormTitle.textContent = "Edit Branch";
+    saveBranchButton.textContent = "Update Branch";
+    cancelBranchEditButton.hidden = false;
+
+    branchForm.scrollIntoView({
+        behavior: "smooth",
+        block: "center"
+    });
+}
+
+branchForm.addEventListener("submit", async event => {
+    event.preventDefault();
+
+    const name = branchName.value.trim();
+    const code = branchCode.value.trim().toUpperCase();
+
+    if (!name) {
+        showMessage(
+            branchMessage,
+            "Enter a branch name.",
+            "error"
+        );
+        return;
+    }
+
+    const payload = {
+        branch_name: name,
+        branch_code: code || null,
+        contact_number: branchContact.value.trim() || null,
+        email: branchEmail.value.trim() || null,
+        address: branchAddress.value.trim() || null,
+        city: branchCity.value.trim() || null,
+        state: branchState.value.trim() || null
+    };
+
+    saveBranchButton.disabled = true;
+    saveBranchButton.textContent = "Saving...";
+
+    try {
+        if (editingBranchId) {
+            const { data, error } = await localBizClient
+                .from("business_branches")
+                .update(payload)
+                .eq("id", editingBranchId)
+                .eq("business_id", currentBusinessId)
+                .select("id");
+
+            if (error) throw error;
+
+            if (!data?.length) {
+                throw new Error("Branch was not updated.");
+            }
+
+        } else {
+            const { error } = await localBizClient
+                .from("business_branches")
+                .insert({
+                    business_id: currentBusinessId,
+                    ...payload
+                });
+
+            if (error) throw error;
+        }
+
+        resetBranchForm();
+        await loadBranches();
+
+        showMessage(
+            branchMessage,
+            "Branch saved successfully.",
+            "success"
+        );
+
+    } catch (error) {
+        console.error(error);
+
+        const message = error.code === "23505"
+            ? "Branch name or branch code already exists."
+            : error.message;
+
+        showMessage(branchMessage, message, "error");
+
+    } finally {
+        saveBranchButton.disabled = false;
+
+        saveBranchButton.textContent = editingBranchId
+            ? "Update Branch"
+            : "Add Branch";
+    }
+});
+
+async function toggleBranchStatus(branch) {
+    if (branch.is_active) {
+
+        const activeCount = allBranches.filter(
+            item => item.is_active
+        ).length;
+
+        if (activeCount <= 1) {
+            showMessage(
+                branchMessage,
+                "At least one active branch must remain.",
+                "error"
+            );
+            return;
+        }
+
+        // Do not deactivate a branch with available stock.
+        const { data: stockRows, error: stockError } =
+            await localBizClient
+                .from("branch_inventory")
+                .select("id")
+                .eq("business_id", currentBusinessId)
+                .eq("branch_id", branch.id)
+                .gt("quantity", 0)
+                .limit(1);
+
+        if (stockError) {
+            showMessage(branchMessage, stockError.message, "error");
+            return;
+        }
+
+        if (stockRows?.length) {
+            showMessage(
+                branchMessage,
+                "This branch has available stock. Transfer or adjust its stock before deactivating it.",
+                "error"
+            );
+            return;
+        }
+
+        if (!confirm(
+            "Deactivate " + branch.branch_name + "?"
+        )) return;
+
+    } else {
+        if (!confirm(
+            "Activate " + branch.branch_name + "?"
+        )) return;
+    }
+
+    const { data, error } = await localBizClient
+        .from("business_branches")
+        .update({ is_active: !branch.is_active })
+        .eq("id", branch.id)
+        .eq("business_id", currentBusinessId)
+        .select("id");
+
+    if (error || !data?.length) {
+        showMessage(
+            branchMessage,
+            error?.message || "Unable to update branch status.",
+            "error"
+        );
+        return;
+    }
+
+    await loadBranches();
+
+    showMessage(
+        branchMessage,
+        "Branch status updated successfully.",
+        "success"
+    );
+}
+
+cancelBranchEditButton.addEventListener(
+    "click",
+    resetBranchForm
+);
+
 
 
 // --------------------------------------------------
@@ -968,7 +1358,7 @@ function editCategory(category) {
 
 categoryForm.addEventListener("submit", async event => {
     event.preventDefault();
-categorySearch.addEventListener("input", renderCategories);
+
     const name = categoryName.value.trim();
     const slug = generateSlug(name);
     const order = Number(categoryDisplayOrder.value);
@@ -1344,7 +1734,7 @@ filteredProducts.forEach(product => {
 
 productForm.addEventListener("submit", async event => {
     event.preventDefault();
-productSearch.addEventListener("input", renderProducts);
+
     const name = productName.value.trim();
     const slug = generateSlug(name);
     const categoryId = productCategory.value;
@@ -1355,6 +1745,8 @@ productSearch.addEventListener("input", renderProducts);
         : Number(sellingPriceInput);
     const order = Number(productDisplayOrder.value);
     const file = productImage.files[0];
+    categorySearch.addEventListener("input", renderCategories);
+    productSearch.addEventListener("input", renderProducts);
 
     if (!name || !slug) {
         showMessage(productMessage, "Enter a valid product name.", "error");
@@ -2565,6 +2957,17 @@ async function loadDashboard() {
             ["owner", "admin"].includes(currentBusinessRole);
 
         appearanceSection.hidden = !canManageAppearance;
+        // Branch management is restricted to owners/admins.
+
+const canManageBranches =
+    ["owner", "admin"].includes(currentBusinessRole);
+
+branchSection.hidden = !canManageBranches;
+branchNavLink.hidden = !canManageBranches;
+
+if (canManageBranches) {
+    await loadBranches();
+}
 
         if (canManageAppearance) {
             await loadStoreAppearance();
