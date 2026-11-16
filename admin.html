@@ -1237,19 +1237,17 @@ productForm.addEventListener("submit", async event => {
         }
 
         const payload = {
-            category_id: categoryId,
-            product_name: name,
-            slug,
-            description: productDescription.value.trim() || null,
-            sku: productSku.value.trim() || null,
-            product_image_url: uploadedImageUrl,
-            price,
-            selling_price: sellingPrice,
-            product_type: productType.value,
-            is_published: productPublished.checked,
-            display_order: order
-        };
-
+    category_id: categoryId,
+    product_name: name,
+    slug,
+    description: productDescription.value.trim() || null,
+    sku: productSku.value.trim() || null,
+    product_image_url: uploadedImageUrl,
+    price,
+    selling_price: sellingPrice,
+    is_published: productPublished.checked,
+    display_order: order
+};
         if (editingProductId) {
             const { data, error } = await localBizClient
                 .from("products")
@@ -1980,7 +1978,10 @@ async function loadDashboard() {
         const membership = memberships[0];
 
         currentBusinessId = membership.business_id;
-currentBusinessRole = membership.role;
+        currentBusinessRole = membership.role;
+        if (businessError) throw businessError;
+if (!business) throw new Error("Business details could not be found.");
+        currentBusinessData = business;
 
 const { data: business, error: businessError } =
     await localBizClient
@@ -2033,9 +2034,8 @@ currentBusinessData = business;
         businessCard.hidden = false;
         statusElement.hidden = true;
 
-        product_type: productType.value,
-productSection.hidden = false;
-
+        productSection.hidden = false;
+categorySection.hidden = false;
 // Appearance editing requires an owner/admin account.
 const canManageAppearance =
     ["owner", "admin"].includes(currentBusinessRole);
