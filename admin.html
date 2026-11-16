@@ -194,6 +194,38 @@ main {
 
 .muted { color: #64748b; font-size: 13px; }
 
+input[type="color"] {
+    width: 100%;
+    height: 45px;
+    padding: 4px;
+    border: 1px solid #cbd5e1;
+    border-radius: 7px;
+    background: white;
+    cursor: pointer;
+}
+
+#storeLogoPreview,
+#storeBannerPreview {
+    max-width: 100%;
+    max-height: 180px;
+    object-fit: contain;
+    background: #f8fafc;
+}
+
+#storeVideosList video {
+    width: 100%;
+    max-height: 180px;
+    border-radius: 8px;
+    background: #0f172a;
+}
+
+.announcement-item {
+    padding: 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: 9px;
+    overflow-wrap: anywhere;
+}
+
 @media(max-width:600px) {
     header { padding: 15px 18px; }
     main { margin: 22px auto; }
@@ -248,6 +280,136 @@ main {
             </div>
         </div>
     </section>
+
+<!-- STORE APPEARANCE -->
+
+<section class="management-section" id="appearanceSection" hidden>
+    <h2>Store Appearance</h2>
+    <p>Customize your business branding and storefront content.</p>
+
+    <h3>Business Logo</h3>
+    <div class="form-grid">
+        <div>
+            <label for="storeLogo">Upload Logo</label>
+            <input type="file" id="storeLogo"
+                accept="image/jpeg,image/png,image/webp">
+            <p class="muted">PNG, JPG or WebP. Maximum 2 MB.</p>
+            <img id="storeLogoPreview" class="preview-image"
+                alt="Logo preview" hidden>
+        </div>
+        <div class="form-actions">
+            <button type="button" class="primary-button"
+                id="uploadLogoButton">Upload Logo</button>
+        </div>
+    </div>
+
+    <hr>
+
+    <h3>Main Storefront Banner</h3>
+    <div class="form-grid">
+        <div>
+            <label for="storeBanner">Upload Banner</label>
+            <input type="file" id="storeBanner"
+                accept="image/jpeg,image/png,image/webp">
+            <p class="muted">JPG, PNG or WebP. Maximum 5 MB.
+                Recommended 1600 × 600 px.</p>
+            <img id="storeBannerPreview" class="preview-image"
+                alt="Banner preview" hidden>
+        </div>
+        <div class="form-actions">
+            <button type="button" class="primary-button"
+                id="uploadBannerButton">Upload Banner</button>
+        </div>
+    </div>
+
+    <hr>
+
+    <h3>Promotional Videos</h3>
+    <p class="muted">Upload up to 3 promotional videos.
+        MP4 or WebM, maximum 25 MB and 30 seconds each.</p>
+
+    <div class="form-grid">
+        <div>
+            <label for="storeVideo">Choose Video</label>
+            <input type="file" id="storeVideo"
+                accept="video/mp4,video/webm">
+            <label for="videoTitle">Video Title</label>
+            <input type="text" id="videoTitle"
+                maxlength="150" placeholder="Example: Our latest collection">
+        </div>
+        <div class="form-actions">
+            <button type="button" class="primary-button"
+                id="uploadVideoButton">Upload Video</button>
+        </div>
+    </div>
+
+    <div id="storeVideosList" class="item-grid">
+        No videos uploaded yet.
+    </div>
+
+    <hr>
+
+    <h3>Scrolling Announcements</h3>
+    <p class="muted">Add messages that will scroll across your storefront.</p>
+
+    <form id="announcementForm" class="form-grid">
+        <div class="full-width">
+            <label for="announcementMessage">Announcement *</label>
+            <input type="text" id="announcementMessage"
+                maxlength="250" required
+                placeholder="Example: Special offers available today!">
+        </div>
+        <div class="full-width">
+            <label for="announcementLink">Optional Link</label>
+            <input type="url" id="announcementLink"
+                placeholder="https://example.com">
+        </div>
+        <div class="full-width">
+            <button type="submit" class="primary-button"
+                id="addAnnouncementButton">Add Announcement</button>
+        </div>
+    </form>
+
+    <div id="announcementsList" class="item-grid">
+        No announcements added yet.
+    </div>
+
+    <hr>
+
+    <h3>Brand Colors and Hero Text</h3>
+
+    <form id="appearanceSettingsForm" class="form-grid">
+        <div>
+            <label for="primaryColor">Primary Theme Color</label>
+            <input type="color" id="primaryColor" value="#2563eb">
+        </div>
+
+        <div>
+            <label for="secondaryColor">Secondary Theme Color</label>
+            <input type="color" id="secondaryColor" value="#f59e0b">
+        </div>
+
+        <div class="full-width">
+            <label for="heroTitle">Storefront Heading</label>
+            <input type="text" id="heroTitle" maxlength="150"
+                placeholder="Welcome to our store">
+        </div>
+
+        <div class="full-width">
+            <label for="heroSubtitle">Storefront Subtitle</label>
+            <textarea id="heroSubtitle" rows="3"
+                maxlength="500"
+                placeholder="Discover our products and latest offers"></textarea>
+        </div>
+
+        <div class="full-width">
+            <button type="submit" class="primary-button"
+                id="saveAppearanceButton">Save Appearance Settings</button>
+        </div>
+    </form>
+
+    <div id="appearanceMessage" class="message" role="status"></div>
+</section>
 
     <!-- CATEGORY MANAGEMENT -->
 
@@ -447,6 +609,7 @@ const categoryFormTitle = document.getElementById("categoryFormTitle");
 
 // Product elements
 
+
 const productSection = document.getElementById("productSection");
 const productForm = document.getElementById("productForm");
 const productName = document.getElementById("productName");
@@ -466,6 +629,47 @@ const productsList = document.getElementById("productsList");
 const saveProductButton = document.getElementById("saveProductButton");
 const cancelProductEditButton = document.getElementById("cancelProductEditButton");
 const productFormTitle = document.getElementById("productFormTitle");
+
+// Store Appearance elements
+
+const appearanceSection = document.getElementById("appearanceSection");
+
+const storeLogo = document.getElementById("storeLogo");
+const storeBanner = document.getElementById("storeBanner");
+const storeVideo = document.getElementById("storeVideo");
+const videoTitle = document.getElementById("videoTitle");
+
+const storeLogoPreview = document.getElementById("storeLogoPreview");
+const storeBannerPreview = document.getElementById("storeBannerPreview");
+
+const uploadLogoButton = document.getElementById("uploadLogoButton");
+const uploadBannerButton = document.getElementById("uploadBannerButton");
+const uploadVideoButton = document.getElementById("uploadVideoButton");
+
+const storeVideosList = document.getElementById("storeVideosList");
+
+const announcementForm = document.getElementById("announcementForm");
+const announcementMessage = document.getElementById("announcementMessage");
+const announcementLink = document.getElementById("announcementLink");
+const announcementsList = document.getElementById("announcementsList");
+
+const appearanceSettingsForm =
+    document.getElementById("appearanceSettingsForm");
+
+const primaryColor = document.getElementById("primaryColor");
+const secondaryColor = document.getElementById("secondaryColor");
+const heroTitle = document.getElementById("heroTitle");
+const heroSubtitle = document.getElementById("heroSubtitle");
+
+const appearanceMessage =
+    document.getElementById("appearanceMessage");
+const saveAppearanceButton =
+    document.getElementById("saveAppearanceButton");
+
+let currentBusinessData = null;
+let currentVideoMedia = [];
+let currentAnnouncements = [];
+
 
 function showMessage(element, message, type = "") {
     element.textContent = message;
@@ -1128,6 +1332,612 @@ cancelProductEditButton.addEventListener("click", resetProductForm);
 
 
 // --------------------------------------------------
+// STORE APPEARANCE MANAGEMENT
+// --------------------------------------------------
+
+function validateUpload(file, type) {
+    if (!file) {
+        throw new Error("Please select a file first.");
+    }
+
+    const rules = {
+        logo: {
+            types: ["image/jpeg", "image/png", "image/webp"],
+            max: 2 * 1024 * 1024
+        },
+        banner: {
+            types: ["image/jpeg", "image/png", "image/webp"],
+            max: 5 * 1024 * 1024
+        },
+        video: {
+            types: ["video/mp4", "video/webm"],
+            max: 25 * 1024 * 1024
+        }
+    };
+
+    const rule = rules[type];
+
+    if (!rule.types.includes(file.type)) {
+        throw new Error("Unsupported file format.");
+    }
+
+    if (file.size > rule.max) {
+        throw new Error("File exceeds the allowed size.");
+    }
+}
+
+function previewImage(input, preview, type) {
+    input.addEventListener("change", () => {
+        const file = input.files[0];
+
+        if (!file) return;
+
+        try {
+            validateUpload(file, type);
+
+            if (preview.dataset.objectUrl) {
+                URL.revokeObjectURL(preview.dataset.objectUrl);
+            }
+
+            const objectUrl = URL.createObjectURL(file);
+            preview.dataset.objectUrl = objectUrl;
+            preview.src = objectUrl;
+            preview.hidden = false;
+
+            showMessage(appearanceMessage, "");
+        } catch (error) {
+            input.value = "";
+            preview.hidden = true;
+            showMessage(appearanceMessage, error.message, "error");
+        }
+    });
+}
+
+previewImage(storeLogo, storeLogoPreview, "logo");
+previewImage(storeBanner, storeBannerPreview, "banner");
+
+async function uploadStoreFile(file, role) {
+    const extension = file.name.split(".").pop().toLowerCase();
+
+    const filePath =
+        currentBusinessId + "/" +
+        role + "/" +
+        crypto.randomUUID() + "." + extension;
+
+    const { error } = await localBizClient.storage
+        .from("store-media")
+        .upload(filePath, file, {
+            cacheControl: "3600",
+            upsert: false,
+            contentType: file.type
+        });
+
+    if (error) throw error;
+
+    const { data } = localBizClient.storage
+        .from("store-media")
+        .getPublicUrl(filePath);
+
+    return {
+        path: filePath,
+        url: data.publicUrl
+    };
+}
+
+async function saveBrandImage(file, role) {
+    validateUpload(file, role);
+
+    const uploaded = await uploadStoreFile(file, role);
+
+    const column = role === "logo" ? "logo_url" : "banner_url";
+
+    try {
+        const { data, error } = await localBizClient
+            .from("businesses")
+            .update({ [column]: uploaded.url })
+            .eq("id", currentBusinessId)
+            .select("id");
+
+        if (error) throw error;
+        if (!data?.length) {
+            throw new Error("Business branding was not updated.");
+        }
+
+        await localBizClient
+            .from("store_media")
+            .update({ is_active: false })
+            .eq("business_id", currentBusinessId)
+            .eq("media_role", role);
+
+        const { error: mediaError } = await localBizClient
+            .from("store_media")
+            .insert({
+                business_id: currentBusinessId,
+                media_role: role,
+                media_type: "image",
+                storage_path: uploaded.path,
+                file_name: file.name,
+                mime_type: file.type,
+                file_size_bytes: file.size
+            });
+
+        if (mediaError) throw mediaError;
+
+        currentBusinessData[column] = uploaded.url;
+
+        return uploaded.url;
+
+    } catch (error) {
+        await localBizClient.storage
+            .from("store-media")
+            .remove([uploaded.path]);
+
+        throw error;
+    }
+}
+
+uploadLogoButton.addEventListener("click", async () => {
+    const file = storeLogo.files[0];
+
+    uploadLogoButton.disabled = true;
+    uploadLogoButton.textContent = "Uploading...";
+
+    try {
+        const url = await saveBrandImage(file, "logo");
+
+        storeLogoPreview.src = url;
+        storeLogoPreview.hidden = false;
+        storeLogo.value = "";
+
+        showMessage(appearanceMessage, "Business logo uploaded successfully.", "success");
+
+    } catch (error) {
+        console.error(error);
+        showMessage(appearanceMessage, error.message, "error");
+    } finally {
+        uploadLogoButton.disabled = false;
+        uploadLogoButton.textContent = "Upload Logo";
+    }
+});
+
+uploadBannerButton.addEventListener("click", async () => {
+    const file = storeBanner.files[0];
+
+    uploadBannerButton.disabled = true;
+    uploadBannerButton.textContent = "Uploading...";
+
+    try {
+        const url = await saveBrandImage(file, "banner");
+
+        storeBannerPreview.src = url;
+        storeBannerPreview.hidden = false;
+        storeBanner.value = "";
+
+        showMessage(appearanceMessage, "Storefront banner uploaded successfully.", "success");
+
+    } catch (error) {
+        console.error(error);
+        showMessage(appearanceMessage, error.message, "error");
+    } finally {
+        uploadBannerButton.disabled = false;
+        uploadBannerButton.textContent = "Upload Banner";
+    }
+});
+
+async function getVideoDuration(file) {
+    return new Promise((resolve, reject) => {
+        const objectUrl = URL.createObjectURL(file);
+        const video = document.createElement("video");
+
+        video.preload = "metadata";
+
+        video.onloadedmetadata = () => {
+            const duration = video.duration;
+            URL.revokeObjectURL(objectUrl);
+
+            if (!Number.isFinite(duration)) {
+                reject(new Error("Unable to read video duration."));
+            } else {
+                resolve(duration);
+            }
+        };
+
+        video.onerror = () => {
+            URL.revokeObjectURL(objectUrl);
+            reject(new Error("Unable to read this video."));
+        };
+
+        video.src = objectUrl;
+    });
+}
+
+async function getOrCreateVideoSection() {
+    const { data, error } = await localBizClient
+        .from("store_sections")
+        .select("id")
+        .eq("business_id", currentBusinessId)
+        .eq("section_type", "video_gallery")
+        .limit(1);
+
+    if (error) throw error;
+
+    if (data?.length) {
+        return data[0].id;
+    }
+
+    const { data: created, error: insertError } =
+        await localBizClient
+            .from("store_sections")
+            .insert({
+                business_id: currentBusinessId,
+                section_type: "video_gallery",
+                section_title: "Promotional Videos",
+                section_content: {
+                    autoplay: false,
+                    muted: true
+                },
+                display_order: 2,
+                is_enabled: true
+            })
+            .select("id")
+            .single();
+
+    if (insertError) throw insertError;
+
+    return created.id;
+}
+
+uploadVideoButton.addEventListener("click", async () => {
+    const file = storeVideo.files[0];
+
+    uploadVideoButton.disabled = true;
+    uploadVideoButton.textContent = "Uploading...";
+
+    let uploadedPath = null;
+
+    try {
+        validateUpload(file, "video");
+
+        const duration = await getVideoDuration(file);
+
+        if (duration > 30) {
+            throw new Error("Video duration must not exceed 30 seconds.");
+        }
+
+        if (currentVideoMedia.length >= 3) {
+            throw new Error("You can upload a maximum of 3 videos.");
+        }
+
+        const sectionId = await getOrCreateVideoSection();
+        const uploaded = await uploadStoreFile(file, "videos");
+
+        uploadedPath = uploaded.path;
+
+        const { error } = await localBizClient
+            .from("store_media")
+            .insert({
+                business_id: currentBusinessId,
+                section_id: sectionId,
+                media_role: "section_asset",
+                media_type: "video",
+                storage_path: uploaded.path,
+                file_name: file.name,
+                mime_type: file.type,
+                file_size_bytes: file.size,
+                duration_seconds: duration,
+                title: videoTitle.value.trim() || null
+            });
+
+        if (error) throw error;
+
+        storeVideo.value = "";
+        videoTitle.value = "";
+
+        await loadStoreVideos();
+
+        showMessage(appearanceMessage, "Video uploaded successfully.", "success");
+
+    } catch (error) {
+        console.error(error);
+
+        if (uploadedPath) {
+            await localBizClient.storage
+                .from("store-media")
+                .remove([uploadedPath]);
+        }
+
+        showMessage(appearanceMessage, error.message, "error");
+
+    } finally {
+        uploadVideoButton.disabled = false;
+        uploadVideoButton.textContent = "Upload Video";
+    }
+});
+
+async function loadStoreVideos() {
+    const { data, error } = await localBizClient
+        .from("store_media")
+        .select("id,storage_path,file_name,title,duration_seconds,is_active")
+        .eq("business_id", currentBusinessId)
+        .eq("media_type", "video")
+        .eq("is_active", true)
+        .order("created_at", { ascending: false });
+
+    if (error) throw error;
+
+    currentVideoMedia = data || [];
+    storeVideosList.replaceChildren();
+
+    if (!currentVideoMedia.length) {
+        storeVideosList.textContent = "No videos uploaded yet.";
+        return;
+    }
+
+    currentVideoMedia.forEach(item => {
+        const card = document.createElement("div");
+        card.className = "item-card";
+
+        const { data: urlData } = localBizClient.storage
+            .from("store-media")
+            .getPublicUrl(item.storage_path);
+
+        const video = document.createElement("video");
+        video.src = urlData.publicUrl;
+        video.controls = true;
+        video.preload = "metadata";
+        video.playsInline = true;
+        card.appendChild(video);
+
+        const heading = document.createElement("h3");
+        heading.textContent = item.title || item.file_name || "Promotional video";
+        card.appendChild(heading);
+
+        const duration = document.createElement("p");
+        duration.textContent =
+            "Duration: " + Number(item.duration_seconds || 0).toFixed(1) + " seconds";
+        card.appendChild(duration);
+
+        card.appendChild(createButton(
+            "Delete Video",
+            "danger-button",
+            () => deleteStoreVideo(item)
+        ));
+
+        storeVideosList.appendChild(card);
+    });
+}
+
+async function deleteStoreVideo(item) {
+    if (!confirm("Delete this promotional video?")) return;
+
+    const { error: storageError } = await localBizClient.storage
+        .from("store-media")
+        .remove([item.storage_path]);
+
+    if (storageError) {
+        showMessage(appearanceMessage, storageError.message, "error");
+        return;
+    }
+
+    const { error } = await localBizClient
+        .from("store_media")
+        .delete()
+        .eq("id", item.id)
+        .eq("business_id", currentBusinessId);
+
+    if (error) {
+        showMessage(appearanceMessage, error.message, "error");
+        return;
+    }
+
+    await loadStoreVideos();
+    showMessage(appearanceMessage, "Video deleted.", "success");
+}
+
+
+// ANNOUNCEMENTS
+
+announcementForm.addEventListener("submit", async event => {
+    event.preventDefault();
+
+    const message = announcementMessage.value.trim();
+    const link = announcementLink.value.trim();
+
+    if (!message) return;
+
+    if (!validImageUrl(link) && link) {
+        showMessage(appearanceMessage, "Enter a valid HTTP or HTTPS link.", "error");
+        return;
+    }
+
+    const button = document.getElementById("addAnnouncementButton");
+    button.disabled = true;
+
+    try {
+        const { error } = await localBizClient
+            .from("store_announcements")
+            .insert({
+                business_id: currentBusinessId,
+                message,
+                link_url: link || null,
+                display_order: currentAnnouncements.length,
+                is_active: true
+            });
+
+        if (error) throw error;
+
+        announcementForm.reset();
+        await loadAnnouncements();
+
+        showMessage(appearanceMessage, "Announcement added.", "success");
+
+    } catch (error) {
+        showMessage(appearanceMessage, error.message, "error");
+    } finally {
+        button.disabled = false;
+    }
+});
+
+async function loadAnnouncements() {
+    const { data, error } = await localBizClient
+        .from("store_announcements")
+        .select("id,message,link_url,is_active,display_order")
+        .eq("business_id", currentBusinessId)
+        .order("display_order", { ascending: true });
+
+    if (error) throw error;
+
+    currentAnnouncements = data || [];
+    announcementsList.replaceChildren();
+
+    if (!currentAnnouncements.length) {
+        announcementsList.textContent = "No announcements added yet.";
+        return;
+    }
+
+    currentAnnouncements.forEach(item => {
+        const card = document.createElement("div");
+        card.className = "announcement-item";
+
+        const message = document.createElement("p");
+        message.textContent = item.message;
+        card.appendChild(message);
+
+        if (item.link_url) {
+            const link = document.createElement("p");
+            link.textContent = "Link: " + item.link_url;
+            card.appendChild(link);
+        }
+
+        const status = document.createElement("p");
+        status.textContent = item.is_active ? "Active" : "Hidden";
+        card.appendChild(status);
+
+        card.appendChild(createButton(
+            item.is_active ? "Hide" : "Show",
+            "secondary-button",
+            () => toggleAnnouncement(item)
+        ));
+
+        card.appendChild(createButton(
+            "Delete",
+            "danger-button",
+            () => deleteAnnouncement(item)
+        ));
+
+        announcementsList.appendChild(card);
+    });
+}
+
+async function toggleAnnouncement(item) {
+    const { data, error } = await localBizClient
+        .from("store_announcements")
+        .update({ is_active: !item.is_active })
+        .eq("id", item.id)
+        .eq("business_id", currentBusinessId)
+        .select("id");
+
+    if (error || !data?.length) {
+        showMessage(appearanceMessage, error?.message || "Unable to update announcement.", "error");
+        return;
+    }
+
+    await loadAnnouncements();
+    showMessage(appearanceMessage, "Announcement status updated.", "success");
+}
+
+async function deleteAnnouncement(item) {
+    if (!confirm("Delete this announcement?")) return;
+
+    const { data, error } = await localBizClient
+        .from("store_announcements")
+        .delete()
+        .eq("id", item.id)
+        .eq("business_id", currentBusinessId)
+        .select("id");
+
+    if (error || !data?.length) {
+        showMessage(appearanceMessage, error?.message || "Unable to delete announcement.", "error");
+        return;
+    }
+
+    await loadAnnouncements();
+    showMessage(appearanceMessage, "Announcement deleted.", "success");
+}
+
+
+// APPEARANCE SETTINGS
+
+async function loadAppearanceSettings() {
+    const { data, error } = await localBizClient
+        .from("site_settings")
+        .select("theme_color,secondary_color,hero_title,hero_subtitle")
+        .eq("business_id", currentBusinessId)
+        .maybeSingle();
+
+    if (error) throw error;
+
+    if (data) {
+        primaryColor.value = data.theme_color || "#2563eb";
+        secondaryColor.value = data.secondary_color || "#f59e0b";
+        heroTitle.value = data.hero_title || "";
+        heroSubtitle.value = data.hero_subtitle || "";
+    }
+
+    if (currentBusinessData.logo_url) {
+        storeLogoPreview.src = currentBusinessData.logo_url;
+        storeLogoPreview.hidden = false;
+    }
+
+    if (currentBusinessData.banner_url) {
+        storeBannerPreview.src = currentBusinessData.banner_url;
+        storeBannerPreview.hidden = false;
+    }
+}
+
+appearanceSettingsForm.addEventListener("submit", async event => {
+    event.preventDefault();
+
+    saveAppearanceButton.disabled = true;
+    saveAppearanceButton.textContent = "Saving...";
+
+    try {
+        const payload = {
+            theme_color: primaryColor.value,
+            secondary_color: secondaryColor.value,
+            hero_title: heroTitle.value.trim() || null,
+            hero_subtitle: heroSubtitle.value.trim() || null
+        };
+
+        const { data, error } = await localBizClient
+            .from("site_settings")
+            .update(payload)
+            .eq("business_id", currentBusinessId)
+            .select("business_id");
+
+        if (error) throw error;
+
+        if (!data?.length) {
+            throw new Error("Store settings were not updated. Check that default settings exist.");
+        }
+
+        showMessage(appearanceMessage, "Appearance settings saved.", "success");
+
+    } catch (error) {
+        showMessage(appearanceMessage, error.message, "error");
+    } finally {
+        saveAppearanceButton.disabled = false;
+        saveAppearanceButton.textContent = "Save Appearance Settings";
+    }
+});
+
+async function loadStoreAppearance() {
+    await loadAppearanceSettings();
+    await loadStoreVideos();
+    await loadAnnouncements();
+}
+
+// --------------------------------------------------
 // DASHBOARD AND AUTHENTICATION
 // --------------------------------------------------
 
@@ -1170,12 +1980,13 @@ async function loadDashboard() {
         const membership = memberships[0];
 
         currentBusinessId = membership.business_id;
+        currentBusinessData = business;
         currentBusinessRole = membership.role;
 
         const { data: business, error: businessError } =
             await localBizClient
                 .from("businesses")
-                .select("id,business_name,slug,business_type,description,logo_url,status")
+                .select("id,business_name,slug,business_type,description,logo_url,banner_url,status")
                 .eq("id", currentBusinessId)
                 .maybeSingle();
 
@@ -1213,9 +2024,18 @@ async function loadDashboard() {
         businessCard.hidden = false;
         statusElement.hidden = true;
 
-        categorySection.hidden = false;
-        productSection.hidden = false;
+        product_type: productType.value,
+productSection.hidden = false;
 
+// Appearance editing requires an owner/admin account.
+const canManageAppearance =
+    ["owner", "admin"].includes(currentBusinessRole);
+
+appearanceSection.hidden = !canManageAppearance;
+
+if (canManageAppearance) {
+    await loadStoreAppearance();
+}
         await loadCategories();
         await loadProducts();
 
