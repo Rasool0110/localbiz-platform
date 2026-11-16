@@ -283,6 +283,55 @@ input[type="color"] {
     .form-grid { grid-template-columns: 1fr; }
     .form-grid .full-width { grid-column: auto; }
 }
+    .admin-quick-nav {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 12px 16px;
+    margin: 16px 0;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+}
+
+.admin-quick-nav a {
+    text-decoration: none;
+    color: #2563eb;
+    font-weight: 600;
+    padding: 9px 14px;
+    border-radius: 7px;
+    background: #eff6ff;
+}
+
+.admin-quick-nav a:hover {
+    background: #dbeafe;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+#categorySection,
+#productSection,
+#appearanceSection {
+    scroll-margin-top: 85px;
+}
+
+@media (max-width: 600px) {
+    .admin-quick-nav {
+        gap: 8px;
+        padding: 10px;
+    }
+
+    .admin-quick-nav a {
+        font-size: 13px;
+        padding: 8px 10px;
+    }
+}
 </style>
 </head>
 
@@ -330,6 +379,11 @@ input[type="color"] {
             </div>
         </div>
     </section>
+    <nav class="admin-quick-nav">
+    <a href="#categorySection">Categories</a>
+    <a href="#productSection">Products</a>
+    <a href="#appearanceSection">Store Appearance</a>
+</nav>
 
 <!-- STORE APPEARANCE -->
 
