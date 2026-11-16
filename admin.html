@@ -41,8 +41,13 @@
             cursor: pointer;
         }
 
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
         main {
-            max-width: 1000px;
+            max-width: 1100px;
             margin: 35px auto;
             padding: 0 20px;
         }
@@ -55,7 +60,8 @@
             color: #64748b;
         }
 
-        .business-card {
+        .business-card,
+        .category-section {
             padding: 28px;
             background: white;
             border-radius: 14px;
@@ -107,143 +113,150 @@
             object-fit: contain;
             margin-bottom: 15px;
         }
-        
-/* Category Management */
 
-.category-section {
-    margin-top: 30px;
-    padding: 28px;
-    background: white;
-    border-radius: 14px;
-    box-shadow: 0 5px 20px rgba(0,0,0,0.05);
-}
+        /* Category Management */
 
-.category-section h2 {
-    margin-top: 0;
-}
+        .category-section {
+            margin-top: 30px;
+        }
 
-.category-form {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 15px;
-    margin: 22px 0;
-}
+        .category-form {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 15px;
+            margin: 22px 0;
+        }
 
-.category-form .full-width {
-    grid-column: 1 / -1;
-}
+        .category-form .full-width {
+            grid-column: 1 / -1;
+        }
 
-.category-form label {
-    display: block;
-    margin-bottom: 6px;
-    font-weight: 600;
-    font-size: 14px;
-}
+        .category-form label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            font-size: 14px;
+        }
 
-.category-form input,
-.category-form textarea {
-    width: 100%;
-    padding: 11px;
-    border: 1px solid #cbd5e1;
-    border-radius: 7px;
-    font: inherit;
-}
+        .category-form input:not([type="checkbox"]),
+        .category-form textarea {
+            width: 100%;
+            padding: 11px;
+            border: 1px solid #cbd5e1;
+            border-radius: 7px;
+            font: inherit;
+        }
 
-.category-form textarea {
-    resize: vertical;
-}
+        .category-form textarea {
+            resize: vertical;
+        }
 
-.category-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    align-items: center;
-}
+        .category-form input[type="checkbox"] {
+            width: auto;
+            margin-right: 6px;
+        }
 
-.category-actions button,
-.category-item button {
-    padding: 10px 15px;
-    border: 0;
-    border-radius: 7px;
-    cursor: pointer;
-    font-weight: 600;
-}
+        .category-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
 
-.primary-button {
-    background: #2563eb;
-    color: white;
-}
+        .category-actions button,
+        .category-item button {
+            padding: 10px 15px;
+            border: 0;
+            border-radius: 7px;
+            cursor: pointer;
+            font-weight: 600;
+        }
 
-.secondary-button {
-    background: #e2e8f0;
-    color: #1e293b;
-}
+        .primary-button {
+            background: #2563eb;
+            color: white;
+        }
 
-.danger-button {
-    background: #fee2e2;
-    color: #b91c1c;
-}
+        .secondary-button {
+            background: #e2e8f0;
+            color: #1e293b;
+        }
 
-.category-list {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-    gap: 15px;
-    margin-top: 20px;
-}
+        .danger-button {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
 
-.category-item {
-    padding: 18px;
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
-}
+        .category-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
 
-.category-item h3 {
-    margin: 0 0 10px;
-}
+        .category-item {
+            padding: 18px;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            min-width: 0;
+        }
 
-.category-item p {
-    color: #64748b;
-    overflow-wrap: anywhere;
-}
+        .category-item h3 {
+            margin: 0 0 10px;
+        }
 
-.category-item img {
-    width: 100%;
-    height: 130px;
-    object-fit: cover;
-    border-radius: 7px;
-    margin-bottom: 12px;
-}
+        .category-item p {
+            color: #64748b;
+            overflow-wrap: anywhere;
+        }
 
-.category-item .category-actions {
-    margin-top: 15px;
-}
+        .category-item img {
+            width: 100%;
+            height: 130px;
+            object-fit: cover;
+            border-radius: 7px;
+            margin-bottom: 12px;
+        }
 
-.category-message {
-    margin-top: 12px;
-    font-size: 14px;
-}
+        .category-item .category-actions {
+            margin-top: 15px;
+        }
 
-.category-message.error {
-    color: #dc2626;
-}
+        .category-message {
+            margin-top: 12px;
+            font-size: 14px;
+        }
 
-.category-message.success {
-    color: #15803d;
-}
+        .category-message.error {
+            color: #dc2626;
+        }
 
-@media (max-width: 600px) {
-    .category-section {
-        padding: 18px;
-    }
+        .category-message.success {
+            color: #15803d;
+        }
 
-    .category-form {
-        grid-template-columns: 1fr;
-    }
+        @media (max-width: 600px) {
+            header {
+                padding: 15px 18px;
+            }
 
-    .category-form .full-width {
-        grid-column: auto;
-    }
-}
+            main {
+                margin: 22px auto;
+            }
+
+            .business-card,
+            .category-section {
+                padding: 18px;
+            }
+
+            .category-form {
+                grid-template-columns: 1fr;
+            }
+
+            .category-form .full-width {
+                grid-column: auto;
+            }
+        }
     </style>
 </head>
 
@@ -251,6 +264,7 @@
 
     <header>
         <h2>LocalBiz</h2>
+
         <button class="logout-button" id="logoutButton">
             Sign Out
         </button>
@@ -266,6 +280,8 @@
         <div id="status" role="status">
             Loading your business information...
         </div>
+
+        <!-- Business Information -->
 
         <section class="business-card" id="businessCard" hidden>
 
@@ -306,588 +322,742 @@
 
         </section>
 
+        <!-- Category Management -->
+
+        <section class="category-section" id="categorySection" hidden>
+
+            <h2>Category Management</h2>
+
+            <p>Add and manage categories for your business.</p>
+
+            <h3 id="categoryFormTitle">Add New Category</h3>
+
+            <form id="categoryForm" class="category-form">
+
+                <div>
+                    <label for="categoryName">Category Name *</label>
+                    <input
+                        type="text"
+                        id="categoryName"
+                        placeholder="Example: Cakes"
+                        maxlength="100"
+                        required
+                    >
+                </div>
+
+                <div>
+                    <label for="categoryImageUrl">Category Image URL</label>
+                    <input
+                        type="url"
+                        id="categoryImageUrl"
+                        placeholder="https://example.com/image.jpg"
+                    >
+                </div>
+
+                <div class="full-width">
+                    <label for="categoryDescription">Description</label>
+                    <textarea
+                        id="categoryDescription"
+                        rows="3"
+                        placeholder="Describe this category..."
+                    ></textarea>
+                </div>
+
+                <div>
+                    <label for="categoryDisplayOrder">Display Order</label>
+                    <input
+                        type="number"
+                        id="categoryDisplayOrder"
+                        value="0"
+                        min="0"
+                        step="1"
+                    >
+                </div>
+
+                <div>
+                    <label>
+                        <input
+                            type="checkbox"
+                            id="categoryPublished"
+                        >
+                        Publish category
+                    </label>
+                </div>
+
+                <div class="full-width category-actions">
+
+                    <button
+                        type="submit"
+                        class="primary-button"
+                        id="saveCategoryButton"
+                    >
+                        Add Category
+                    </button>
+
+                    <button
+                        type="button"
+                        class="secondary-button"
+                        id="cancelEditButton"
+                        hidden
+                    >
+                        Cancel Edit
+                    </button>
+
+                </div>
+
+            </form>
+
+            <div
+                id="categoryMessage"
+                class="category-message"
+                role="status"
+            ></div>
+
+            <hr>
+
+            <h3>Your Categories</h3>
+
+            <div id="categoriesList" class="category-list">
+                Loading categories...
+            </div>
+
+        </section>
+
     </main>
+
+    <!-- Supabase Libraries -->
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="./supabase-config.js"></script>
 
+    <script>
+    "use strict";
 
+    const localBizClient = window.localBizSupabase;
 
-
-const localBizClient = window.localBizSupabase;
-
-// Dashboard elements
-const userEmail = document.getElementById("userEmail");
-const statusElement = document.getElementById("status");
-const businessCard = document.getElementById("businessCard");
-const logoutButton = document.getElementById("logoutButton");
-
-// Category elements
-const categorySection = document.getElementById("categorySection");
-const categoryForm = document.getElementById("categoryForm");
-const categoryName = document.getElementById("categoryName");
-const categoryDescription = document.getElementById("categoryDescription");
-const categoryImageUrl = document.getElementById("categoryImageUrl");
-const categoryDisplayOrder = document.getElementById("categoryDisplayOrder");
-const categoryPublished = document.getElementById("categoryPublished");
-const categoryMessage = document.getElementById("categoryMessage");
-const categoriesList = document.getElementById("categoriesList");
-const saveCategoryButton = document.getElementById("saveCategoryButton");
-const cancelEditButton = document.getElementById("cancelEditButton");
-const categoryFormTitle = document.getElementById("categoryFormTitle");
-
-let currentBusinessId = null;
-let editingCategoryId = null;
-
-
-// Display category messages
-function showCategoryMessage(message, type = "") {
-    categoryMessage.textContent = message;
-    categoryMessage.className = "category-message " + type;
-}
-
-
-// Generate URL-friendly category slug
-function generateSlug(value) {
-    return value
-        .toLowerCase()
-        .trim()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/^-+|-+$/g, "");
-}
-
-
-// Reset category form
-function resetCategoryForm() {
-    categoryForm.reset();
-
-    editingCategoryId = null;
-
-    categoryDisplayOrder.value = 0;
-    categoryPublished.checked = false;
-
-    categoryFormTitle.textContent = "Add New Category";
-    saveCategoryButton.textContent = "Add Category";
-
-    cancelEditButton.hidden = true;
-
-    showCategoryMessage("");
-}
-
-
-// Load categories for the logged-in business
-async function loadCategories() {
-
-    categoriesList.textContent = "Loading categories...";
-
-    const { data, error } = await localBizClient
-        .from("categories")
-        .select(`
-            id,
-            category_name,
-            slug,
-            description,
-            image_url,
-            display_order,
-            is_published,
-            created_at
-        `)
-        .eq("business_id", currentBusinessId)
-        .order("display_order", { ascending: true });
-
-    if (error) {
-        console.error("Category loading error:", error);
-        categoriesList.textContent =
-            "Unable to load categories: " + error.message;
-        return;
+    if (!localBizClient) {
+        throw new Error(
+            "LocalBiz Supabase client is not initialized. Check supabase-config.js."
+        );
     }
 
-    renderCategories(data || []);
-}
+    // Dashboard elements
+
+    const userEmail = document.getElementById("userEmail");
+    const statusElement = document.getElementById("status");
+    const businessCard = document.getElementById("businessCard");
+    const logoutButton = document.getElementById("logoutButton");
+
+    // Category elements
+
+    const categorySection = document.getElementById("categorySection");
+    const categoryForm = document.getElementById("categoryForm");
+    const categoryName = document.getElementById("categoryName");
+    const categoryDescription = document.getElementById("categoryDescription");
+    const categoryImageUrl = document.getElementById("categoryImageUrl");
+    const categoryDisplayOrder = document.getElementById("categoryDisplayOrder");
+    const categoryPublished = document.getElementById("categoryPublished");
+    const categoryMessage = document.getElementById("categoryMessage");
+    const categoriesList = document.getElementById("categoriesList");
+    const saveCategoryButton = document.getElementById("saveCategoryButton");
+    const cancelEditButton = document.getElementById("cancelEditButton");
+    const categoryFormTitle = document.getElementById("categoryFormTitle");
+
+    let currentBusinessId = null;
+    let editingCategoryId = null;
 
 
-// Render categories safely
-function renderCategories(categories) {
+    // Display category messages
 
-    categoriesList.replaceChildren();
-
-    if (categories.length === 0) {
-        categoriesList.textContent =
-            "No categories found. Add your first category above.";
-        return;
+    function showCategoryMessage(message, type = "") {
+        categoryMessage.textContent = message;
+        categoryMessage.className = "category-message " + type;
     }
 
-    categories.forEach(category => {
 
-        const card = document.createElement("div");
-        card.className = "category-item";
+    // Generate URL-friendly category slug
 
-        if (category.image_url) {
-            const image = document.createElement("img");
-            image.src = category.image_url;
-            image.alt = category.category_name;
-            image.loading = "lazy";
+    function generateSlug(value) {
+        return value
+            .toLowerCase()
+            .trim()
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/^-+|-+$/g, "");
+    }
 
-            image.addEventListener("error", () => {
-                image.hidden = true;
-            });
 
-            card.appendChild(image);
+    // Reset category form
+
+    function resetCategoryForm() {
+        categoryForm.reset();
+
+        editingCategoryId = null;
+
+        categoryDisplayOrder.value = 0;
+        categoryPublished.checked = false;
+
+        categoryFormTitle.textContent = "Add New Category";
+        saveCategoryButton.textContent = "Add Category";
+
+        cancelEditButton.hidden = true;
+
+        showCategoryMessage("");
+    }
+
+
+    // Load categories for the logged-in business
+
+    async function loadCategories() {
+
+        categoriesList.textContent = "Loading categories...";
+
+        const { data, error } = await localBizClient
+            .from("categories")
+            .select(`
+                id,
+                category_name,
+                slug,
+                description,
+                image_url,
+                display_order,
+                is_published
+            `)
+            .eq("business_id", currentBusinessId)
+            .order("display_order", { ascending: true });
+
+        if (error) {
+            console.error("Category loading error:", error);
+            categoriesList.textContent =
+                "Unable to load categories: " + error.message;
+            return;
         }
 
-        const heading = document.createElement("h3");
-        heading.textContent = category.category_name;
-        card.appendChild(heading);
+        renderCategories(data || []);
+    }
 
-        const description = document.createElement("p");
-        description.textContent =
-            category.description || "No description";
-        card.appendChild(description);
 
-        const slug = document.createElement("p");
-        slug.textContent = "Slug: " + category.slug;
-        card.appendChild(slug);
+    // Render categories safely
 
-        const order = document.createElement("p");
-        order.textContent =
-            "Display Order: " + category.display_order;
-        card.appendChild(order);
+    function renderCategories(categories) {
 
-        const published = document.createElement("p");
-        published.textContent = category.is_published
-            ? "Status: Published"
-            : "Status: Hidden";
+        categoriesList.replaceChildren();
 
-        card.appendChild(published);
+        if (categories.length === 0) {
+            categoriesList.textContent =
+                "No categories found. Add your first category above.";
+            return;
+        }
 
-        const actions = document.createElement("div");
-        actions.className = "category-actions";
+        categories.forEach(category => {
 
-        // Edit button
-        const editButton = document.createElement("button");
-        editButton.type = "button";
-        editButton.className = "secondary-button";
-        editButton.textContent = "Edit";
+            const card = document.createElement("div");
+            card.className = "category-item";
 
-        editButton.addEventListener("click", () => {
-            editCategory(category);
+            if (category.image_url) {
+                const image = document.createElement("img");
+                image.src = category.image_url;
+                image.alt = category.category_name;
+                image.loading = "lazy";
+
+                image.addEventListener("error", () => {
+                    image.hidden = true;
+                });
+
+                card.appendChild(image);
+            }
+
+            const heading = document.createElement("h3");
+            heading.textContent = category.category_name;
+            card.appendChild(heading);
+
+            const description = document.createElement("p");
+            description.textContent =
+                category.description || "No description";
+            card.appendChild(description);
+
+            const slug = document.createElement("p");
+            slug.textContent = "Slug: " + category.slug;
+            card.appendChild(slug);
+
+            const order = document.createElement("p");
+            order.textContent =
+                "Display Order: " + category.display_order;
+            card.appendChild(order);
+
+            const published = document.createElement("p");
+            published.textContent = category.is_published
+                ? "Status: Published"
+                : "Status: Hidden";
+
+            card.appendChild(published);
+
+            const actions = document.createElement("div");
+            actions.className = "category-actions";
+
+            // Edit button
+
+            const editButton = document.createElement("button");
+            editButton.type = "button";
+            editButton.className = "secondary-button";
+            editButton.textContent = "Edit";
+
+            editButton.addEventListener("click", () => {
+                editCategory(category);
+            });
+
+            actions.appendChild(editButton);
+
+            // Publish / Hide button
+
+            const toggleButton = document.createElement("button");
+            toggleButton.type = "button";
+            toggleButton.className = "secondary-button";
+            toggleButton.textContent = category.is_published
+                ? "Hide"
+                : "Publish";
+
+            toggleButton.addEventListener("click", () => {
+                toggleCategory(category);
+            });
+
+            actions.appendChild(toggleButton);
+
+            // Delete button
+
+            const deleteButton = document.createElement("button");
+            deleteButton.type = "button";
+            deleteButton.className = "danger-button";
+            deleteButton.textContent = "Delete";
+
+            deleteButton.addEventListener("click", () => {
+                deleteCategory(category);
+            });
+
+            actions.appendChild(deleteButton);
+
+            card.appendChild(actions);
+            categoriesList.appendChild(card);
         });
+    }
 
-        actions.appendChild(editButton);
 
-        // Publish / Hide button
-        const toggleButton = document.createElement("button");
-        toggleButton.type = "button";
-        toggleButton.className = "secondary-button";
-        toggleButton.textContent = category.is_published
-            ? "Hide"
-            : "Publish";
+    // Add or update a category
 
-        toggleButton.addEventListener("click", () => {
-            toggleCategory(category);
-        });
+    categoryForm.addEventListener("submit", async function(event) {
 
-        actions.appendChild(toggleButton);
+        event.preventDefault();
 
-        // Delete button
-        const deleteButton = document.createElement("button");
-        deleteButton.type = "button";
-        deleteButton.className = "danger-button";
-        deleteButton.textContent = "Delete";
+        if (!currentBusinessId) {
+            showCategoryMessage(
+                "Business information is not available.",
+                "error"
+            );
+            return;
+        }
 
-        deleteButton.addEventListener("click", () => {
-            deleteCategory(category);
-        });
+        const name = categoryName.value.trim();
 
-        actions.appendChild(deleteButton);
+        if (!name) {
+            showCategoryMessage(
+                "Please enter a category name.",
+                "error"
+            );
+            return;
+        }
 
-        card.appendChild(actions);
-        categoriesList.appendChild(card);
+        const slug = generateSlug(name);
+
+        if (!slug) {
+            showCategoryMessage(
+                "Please enter a valid category name.",
+                "error"
+            );
+            return;
+        }
+
+        const displayOrder = Number(categoryDisplayOrder.value);
+
+        if (
+            !Number.isSafeInteger(displayOrder) ||
+            displayOrder < 0
+        ) {
+            showCategoryMessage(
+                "Display order must be a non-negative whole number.",
+                "error"
+            );
+            return;
+        }
+
+        const categoryData = {
+            category_name: name,
+            slug: slug,
+            description: categoryDescription.value.trim() || null,
+            image_url: categoryImageUrl.value.trim() || null,
+            display_order: displayOrder,
+            is_published: categoryPublished.checked
+        };
+
+        saveCategoryButton.disabled = true;
+        saveCategoryButton.textContent = "Saving...";
+
+        try {
+
+            if (editingCategoryId) {
+
+                // Update existing category
+
+                const { data, error } = await localBizClient
+                    .from("categories")
+                    .update(categoryData)
+                    .eq("id", editingCategoryId)
+                    .eq("business_id", currentBusinessId)
+                    .select("id");
+
+                if (error) throw error;
+
+                if (!data || data.length === 0) {
+                    throw new Error("Category was not updated.");
+                }
+
+                showCategoryMessage(
+                    "Category updated successfully.",
+                    "success"
+                );
+
+            } else {
+
+                // Create new category
+
+                const { error } = await localBizClient
+                    .from("categories")
+                    .insert({
+                        business_id: currentBusinessId,
+                        ...categoryData
+                    });
+
+                if (error) throw error;
+
+                showCategoryMessage(
+                    "Category added successfully.",
+                    "success"
+                );
+            }
+
+            resetCategoryForm();
+            await loadCategories();
+
+        } catch (error) {
+
+            console.error("Category save error:", error);
+
+            showCategoryMessage(
+                "Unable to save category: " + error.message,
+                "error"
+            );
+
+        } finally {
+
+            saveCategoryButton.disabled = false;
+
+            saveCategoryButton.textContent = editingCategoryId
+                ? "Update Category"
+                : "Add Category";
+        }
     });
-}
 
 
-// Add or update a category
-categoryForm.addEventListener("submit", async function(event) {
+    // Edit category
 
-    event.preventDefault();
+    function editCategory(category) {
 
-    if (!currentBusinessId) {
-        showCategoryMessage(
-            "Business information is not available.",
-            "error"
-        );
-        return;
+        editingCategoryId = category.id;
+
+        categoryName.value = category.category_name || "";
+        categoryDescription.value = category.description || "";
+        categoryImageUrl.value = category.image_url || "";
+        categoryDisplayOrder.value = category.display_order ?? 0;
+        categoryPublished.checked = category.is_published;
+
+        categoryFormTitle.textContent = "Edit Category";
+        saveCategoryButton.textContent = "Update Category";
+
+        cancelEditButton.hidden = false;
+
+        showCategoryMessage("");
+
+        categoryForm.scrollIntoView({
+            behavior: "smooth",
+            block: "center"
+        });
     }
 
-    const name = categoryName.value.trim();
 
-    if (!name) {
-        showCategoryMessage(
-            "Please enter a category name.",
-            "error"
-        );
-        return;
-    }
+    // Publish or hide category
 
-    const slug = generateSlug(name);
+    async function toggleCategory(category) {
 
-    if (!slug) {
-        showCategoryMessage(
-            "Please enter a valid category name.",
-            "error"
-        );
-        return;
-    }
+        const newStatus = !category.is_published;
 
-    const displayOrder = Number(categoryDisplayOrder.value);
+        try {
 
-    if (!Number.isInteger(displayOrder) || displayOrder < 0) {
-        showCategoryMessage(
-            "Display order must be a non-negative whole number.",
-            "error"
-        );
-        return;
-    }
-
-    const categoryData = {
-        category_name: name,
-        slug: slug,
-        description: categoryDescription.value.trim() || null,
-        image_url: categoryImageUrl.value.trim() || null,
-        display_order: displayOrder,
-        is_published: categoryPublished.checked
-    };
-
-    saveCategoryButton.disabled = true;
-    saveCategoryButton.textContent = "Saving...";
-
-    try {
-
-        if (editingCategoryId) {
-
-            // Update existing category
             const { data, error } = await localBizClient
                 .from("categories")
-                .update(categoryData)
-                .eq("id", editingCategoryId)
+                .update({
+                    is_published: newStatus
+                })
+                .eq("id", category.id)
                 .eq("business_id", currentBusinessId)
                 .select("id");
 
             if (error) throw error;
 
             if (!data || data.length === 0) {
-                throw new Error("Category was not updated.");
+                throw new Error("Category status was not updated.");
             }
 
             showCategoryMessage(
-                "Category updated successfully.",
+                newStatus
+                    ? "Category published successfully."
+                    : "Category hidden successfully.",
                 "success"
             );
 
-        } else {
+            await loadCategories();
 
-            // Create new category
-            const { error } = await localBizClient
+        } catch (error) {
+
+            console.error("Category status error:", error);
+
+            showCategoryMessage(
+                "Unable to update category: " + error.message,
+                "error"
+            );
+        }
+    }
+
+
+    // Delete category
+
+    async function deleteCategory(category) {
+
+        const confirmed = window.confirm(
+            "Are you sure you want to delete '" +
+            category.category_name +
+            "'? This action cannot be undone. If products are linked to this category, reassign them first."
+        );
+
+        if (!confirmed) return;
+
+        try {
+
+            const { data, error } = await localBizClient
                 .from("categories")
-                .insert({
-                    business_id: currentBusinessId,
-                    ...categoryData
-                });
+                .delete()
+                .eq("id", category.id)
+                .eq("business_id", currentBusinessId)
+                .select("id");
 
             if (error) throw error;
 
+            if (!data || data.length === 0) {
+                throw new Error("Category was not deleted.");
+            }
+
+            if (editingCategoryId === category.id) {
+                resetCategoryForm();
+            }
+
             showCategoryMessage(
-                "Category added successfully.",
+                "Category deleted successfully.",
                 "success"
             );
+
+            await loadCategories();
+
+        } catch (error) {
+
+            console.error("Category deletion error:", error);
+
+            showCategoryMessage(
+                "Unable to delete category: " + error.message,
+                "error"
+            );
         }
-
-        resetCategoryForm();
-        await loadCategories();
-
-    } catch (error) {
-
-        console.error("Category save error:", error);
-
-        showCategoryMessage(
-            "Unable to save category: " + error.message,
-            "error"
-        );
-
-    } finally {
-
-        saveCategoryButton.disabled = false;
-        saveCategoryButton.textContent = editingCategoryId
-            ? "Update Category"
-            : "Add Category";
     }
-});
 
 
-// Edit category
-function editCategory(category) {
+    // Cancel category editing
 
-    editingCategoryId = category.id;
-
-    categoryName.value = category.category_name || "";
-    categoryDescription.value = category.description || "";
-    categoryImageUrl.value = category.image_url || "";
-    categoryDisplayOrder.value = category.display_order ?? 0;
-    categoryPublished.checked = category.is_published;
-
-    categoryFormTitle.textContent = "Edit Category";
-    saveCategoryButton.textContent = "Update Category";
-
-    cancelEditButton.hidden = false;
-
-    showCategoryMessage("");
-
-    categoryForm.scrollIntoView({
-        behavior: "smooth",
-        block: "center"
-    });
-}
-
-
-// Publish or hide category
-async function toggleCategory(category) {
-
-    const newStatus = !category.is_published;
-
-    try {
-
-        const { data, error } = await localBizClient
-            .from("categories")
-            .update({
-                is_published: newStatus
-            })
-            .eq("id", category.id)
-            .eq("business_id", currentBusinessId)
-            .select("id");
-
-        if (error) throw error;
-
-        if (!data || data.length === 0) {
-            throw new Error("Category status was not updated.");
-        }
-
-        showCategoryMessage(
-            newStatus
-                ? "Category published successfully."
-                : "Category hidden successfully.",
-            "success"
-        );
-
-        await loadCategories();
-
-    } catch (error) {
-
-        console.error("Category status error:", error);
-
-        showCategoryMessage(
-            "Unable to update category: " + error.message,
-            "error"
-        );
-    }
-}
-
-
-// Delete category
-async function deleteCategory(category) {
-
-    const confirmed = window.confirm(
-        "Are you sure you want to delete '" +
-        category.category_name +
-        "'? This action cannot be undone. Categories containing products may not be deletable until those products are reassigned or removed."
+    cancelEditButton.addEventListener(
+        "click",
+        resetCategoryForm
     );
 
-    if (!confirmed) return;
 
-    try {
+    // Load dashboard and business information
 
-        const { data, error } = await localBizClient
-            .from("categories")
-            .delete()
-            .eq("id", category.id)
-            .eq("business_id", currentBusinessId)
-            .select("id");
+    async function loadDashboard() {
 
-        if (error) throw error;
+        try {
 
-        if (!data || data.length === 0) {
-            throw new Error("Category was not deleted.");
-        }
+            const { data: sessionData, error: sessionError } =
+                await localBizClient.auth.getSession();
 
-        resetCategoryForm();
+            if (sessionError) throw sessionError;
 
-        showCategoryMessage(
-            "Category deleted successfully.",
-            "success"
-        );
+            const session = sessionData.session;
 
-        await loadCategories();
+            if (!session) {
+                window.location.replace("./index.html");
+                return;
+            }
 
-    } catch (error) {
+            const user = session.user;
 
-        console.error("Category deletion error:", error);
+            userEmail.textContent =
+                "Logged in as: " + user.email;
 
-        showCategoryMessage(
-            "Unable to delete category: " + error.message,
-            "error"
-        );
-    }
-}
+            // Get active business membership
 
-<script>
-// Cancel category editing
-cancelEditButton.addEventListener("click", resetCategoryForm);
+            const { data: memberships, error: membershipError } =
+                await localBizClient
+                    .from("business_users")
+                    .select("business_id, role, is_active")
+                    .eq("user_id", user.id)
+                    .eq("is_active", true);
 
+            if (membershipError) throw membershipError;
 
-// Load dashboard and business information
-async function loadDashboard() {
+            if (!memberships || memberships.length === 0) {
+                statusElement.textContent =
+                    "No active business membership found.";
+                return;
+            }
 
-    try {
+            if (memberships.length > 1) {
+                statusElement.textContent =
+                    "Multiple business memberships found. Business selection is not available yet.";
+                return;
+            }
 
-        const { data: sessionData, error: sessionError } =
-            await localBizClient.auth.getSession();
+            const membership = memberships[0];
 
-        if (sessionError) throw sessionError;
+            currentBusinessId = membership.business_id;
 
-        const session = sessionData.session;
+            // Get business details
 
-        if (!session) {
-            window.location.href = "./index.html";
-            return;
-        }
+            const { data: business, error: businessError } =
+                await localBizClient
+                    .from("businesses")
+                    .select(`
+                        id,
+                        business_name,
+                        slug,
+                        business_type,
+                        description,
+                        logo_url,
+                        status
+                    `)
+                    .eq("id", currentBusinessId)
+                    .maybeSingle();
 
-        const user = session.user;
+            if (businessError) throw businessError;
 
-        userEmail.textContent =
-            "Logged in as: " + user.email;
+            if (!business) {
+                statusElement.textContent =
+                    "Business details could not be found.";
+                return;
+            }
 
-        // Get user's active business membership
-        const { data: memberships, error: membershipError } =
-            await localBizClient
-                .from("business_users")
-                .select("business_id, role, is_active")
-                .eq("user_id", user.id)
-                .eq("is_active", true);
+            document.getElementById("businessName").textContent =
+                business.business_name || "Not set";
 
-        if (membershipError) throw membershipError;
+            document.getElementById("businessDescription").textContent =
+                business.description || "No description available.";
 
-        if (!memberships || memberships.length === 0) {
+            document.getElementById("businessType").textContent =
+                business.business_type || "Not set";
+
+            document.getElementById("businessRole").textContent =
+                membership.role || "Not set";
+
+            document.getElementById("businessSlug").textContent =
+                business.slug || "Not set";
+
+            document.getElementById("businessStatus").textContent =
+                business.status || "Not set";
+
+            const logo = document.getElementById("businessLogo");
+
+            if (business.logo_url) {
+                logo.src = business.logo_url;
+                logo.hidden = false;
+            } else {
+                logo.hidden = true;
+                logo.removeAttribute("src");
+            }
+
+            businessCard.hidden = false;
+            statusElement.hidden = true;
+
+            // Show category management
+
+            categorySection.hidden = false;
+
+            // Load this business's categories
+
+            await loadCategories();
+
+        } catch (error) {
+
+            console.error("Dashboard loading error:", error);
+
+            statusElement.hidden = false;
             statusElement.textContent =
-                "No active business membership found.";
-            return;
+                "Unable to load dashboard: " + error.message;
+
+            statusElement.classList.add("error");
         }
-
-        if (memberships.length > 1) {
-            statusElement.textContent =
-                "Multiple business memberships found. Business selection is not available yet.";
-            return;
-        }
-
-        const membership = memberships[0];
-
-        currentBusinessId = membership.business_id;
-
-        // Get business details
-        const { data: business, error: businessError } =
-            await localBizClient
-                .from("businesses")
-                .select("id, business_name, slug, business_type, description, logo_url, status")
-                .eq("id", currentBusinessId)
-                .maybeSingle();
-
-        if (businessError) throw businessError;
-
-        if (!business) {
-            statusElement.textContent =
-                "Business details could not be found.";
-            return;
-        }
-
-        document.getElementById("businessName").textContent =
-            business.business_name || "Not set";
-
-        document.getElementById("businessDescription").textContent =
-            business.description || "No description available.";
-
-        document.getElementById("businessType").textContent =
-            business.business_type || "Not set";
-
-        document.getElementById("businessRole").textContent =
-            membership.role || "Not set";
-
-        document.getElementById("businessSlug").textContent =
-            business.slug || "Not set";
-
-        document.getElementById("businessStatus").textContent =
-            business.status || "Not set";
-
-        const logo = document.getElementById("businessLogo");
-
-        if (business.logo_url) {
-            logo.src = business.logo_url;
-            logo.hidden = false;
-        } else {
-            logo.hidden = true;
-        }
-
-        businessCard.hidden = false;
-        statusElement.hidden = true;
-
-        // Show category management
-        categorySection.hidden = false;
-
-        // Load categories for this business
-        await loadCategories();
-
-    } catch (error) {
-
-        console.error("Dashboard loading error:", error);
-
-        statusElement.hidden = false;
-        statusElement.textContent =
-            "Unable to load dashboard: " + error.message;
-
-        statusElement.classList.add("error");
     }
-}
 
 
-// Sign Out
-logoutButton.addEventListener("click", async function() {
+    // Sign Out
 
-    logoutButton.disabled = true;
-    logoutButton.textContent = "Signing out...";
+    logoutButton.addEventListener("click", async function() {
 
-    try {
+        logoutButton.disabled = true;
+        logoutButton.textContent = "Signing out...";
 
-        const { error } = await localBizClient.auth.signOut();
+        try {
 
-        if (error) throw error;
+            const { error } =
+                await localBizClient.auth.signOut();
 
-        window.location.href = "./index.html";
+            if (error) throw error;
 
-    } catch (error) {
+            window.location.replace("./index.html");
 
-        console.error("Sign out error:", error);
+        } catch (error) {
 
-        statusElement.hidden = false;
-        statusElement.textContent =
-            "Sign out failed: " + error.message;
+            console.error("Sign out error:", error);
 
-        logoutButton.disabled = false;
-        logoutButton.textContent = "Sign Out";
-    }
-});
+            statusElement.hidden = false;
+            statusElement.textContent =
+                "Sign out failed: " + error.message;
+
+            statusElement.classList.add("error");
+
+            logoutButton.disabled = false;
+            logoutButton.textContent = "Sign Out";
+        }
+    });
 
 
-// Initialize dashboard
-loadDashboard();
-</script>
+    // Initialize dashboard
+
+    loadDashboard();
+
+    </script>
 
 </body>
 </html>
