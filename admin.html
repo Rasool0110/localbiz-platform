@@ -225,7 +225,57 @@ input[type="color"] {
     border-radius: 9px;
     overflow-wrap: anywhere;
 }
+.catalogue-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin: 15px 0;
+}
 
+.catalogue-toolbar input[type="search"] {
+    flex: 1;
+    min-width: 220px;
+    padding: 11px;
+    border: 1px solid #cbd5e1;
+    border-radius: 7px;
+    font: inherit;
+}
+
+.catalogue-toolbar button,
+.import-label {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 11px 15px;
+    border: 0;
+    border-radius: 7px;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.import-label {
+    background: #2563eb;
+    color: white;
+}
+
+.catalogue-toolbar button:hover,
+.import-label:hover {
+    opacity: .9;
+}
+
+@media(max-width:600px) {
+    .catalogue-toolbar {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .catalogue-toolbar input[type="search"] {
+        width: 100%;
+    }
+}
 @media(max-width:600px) {
     header { padding: 15px 18px; }
     main { margin: 22px auto; }
@@ -466,7 +516,25 @@ input[type="color"] {
 
         <hr>
         <h3>Your Categories</h3>
-        <div id="categoriesList" class="item-grid">Loading categories...</div>
+
+<div class="catalogue-toolbar">
+    <input type="search" id="categorySearch"
+        placeholder="Search categories by name...">
+
+    <button type="button" class="primary-button"
+        id="downloadCategoryTemplate">
+        Download Template
+    </button>
+
+    <label class="primary-button import-label" for="categoryImportFile">
+        Import Categories
+    </label>
+    <input type="file" id="categoryImportFile"
+        accept=".xlsx,.xls,.csv" hidden>
+</div>
+
+<div id="categoryImportMessage" class="message" role="status"></div>
+<div id="categoriesList" class="item-grid">Loading categories...</div>
     </section>
 
     <!-- PRODUCT MANAGEMENT -->
@@ -558,12 +626,31 @@ input[type="color"] {
 
         <hr>
         <h3>Your Products</h3>
-        <div id="productsList" class="item-grid">Loading products...</div>
+
+<div class="catalogue-toolbar">
+    <input type="search" id="productSearch"
+        placeholder="Search products by name, SKU or category...">
+
+    <button type="button" class="primary-button"
+        id="downloadProductTemplate">
+        Download Template
+    </button>
+
+    <label class="primary-button import-label" for="productImportFile">
+        Import Products
+    </label>
+    <input type="file" id="productImportFile"
+        accept=".xlsx,.xls,.csv" hidden>
+</div>
+
+<div id="productImportMessage" class="message" role="status"></div>
+<div id="productsList" class="item-grid">Loading products...</div>
     </section>
 
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 <script src="./supabase-config.js"></script>
 
 <script>
@@ -626,6 +713,8 @@ const currentImageText = document.getElementById("currentImageText");
 const productPublished = document.getElementById("productPublished");
 const productMessage = document.getElementById("productMessage");
 const productsList = document.getElementById("productsList");
+const categorySearch = document.getElementById("categorySearch");
+const productSearch = document.getElementById("productSearch");
 const saveProductButton = document.getElementById("saveProductButton");
 const cancelProductEditButton = document.getElementById("cancelProductEditButton");
 const productFormTitle = document.getElementById("productFormTitle");
@@ -740,13 +829,20 @@ async function loadCategories() {
 function renderCategories() {
     categoriesList.replaceChildren();
 
-    if (allCategories.length === 0) {
-        categoriesList.textContent =
-            "No categories found. Add your first category above.";
-        return;
-    }
+    const searchTerm = categorySearch.value.trim().toLowerCase();
 
-    allCategories.forEach(category => {
+const filteredCategories = allCategories.filter(category =>
+    (category.category_name || "").toLowerCase().includes(searchTerm)
+);
+
+if (filteredCategories.length === 0) {
+    categoriesList.textContent = searchTerm
+        ? "No matching categories found."
+        : "No categories found. Add your first category above.";
+    return;
+}
+
+filteredCategories.forEach(category => {
         const card = document.createElement("div");
         card.className = "item-card";
 
@@ -818,7 +914,7 @@ function editCategory(category) {
 
 categoryForm.addEventListener("submit", async event => {
     event.preventDefault();
-
+categorySearch.addEventListener("input", renderCategories);
     const name = categoryName.value.trim();
     const slug = generateSlug(name);
     const order = Number(categoryDisplayOrder.value);
@@ -1104,12 +1200,28 @@ async function loadProducts() {
 function renderProducts() {
     productsList.replaceChildren();
 
-    if (!allProducts.length) {
-        productsList.textContent = "No products found. Add your first product above.";
-        return;
-    }
+    const searchTerm = productSearch.value.trim().toLowerCase();
 
-    allProducts.forEach(product => {
+const filteredProducts = allProducts.filter(product => {
+    const category = allCategories.find(
+        c => c.id === product.category_id
+    );
+
+    return (
+        (product.product_name || "").toLowerCase().includes(searchTerm) ||
+        (product.sku || "").toLowerCase().includes(searchTerm) ||
+        (category?.category_name || "").toLowerCase().includes(searchTerm)
+    );
+});
+
+if (filteredProducts.length === 0) {
+    productsList.textContent = searchTerm
+        ? "No matching products found."
+        : "No products found. Add your first product above.";
+    return;
+}
+
+filteredProducts.forEach(product => {
         const card = document.createElement("div");
         card.className = "item-card";
 
@@ -1178,7 +1290,7 @@ function renderProducts() {
 
 productForm.addEventListener("submit", async event => {
     event.preventDefault();
-
+productSearch.addEventListener("input", renderProducts);
     const name = productName.value.trim();
     const slug = generateSlug(name);
     const categoryId = productCategory.value;
@@ -1328,6 +1440,359 @@ async function deleteProduct(product) {
 
 cancelProductEditButton.addEventListener("click", resetProductForm);
 
+
+// --------------------------------------------------
+// EXCEL IMPORT AND TEMPLATE DOWNLOADS
+// --------------------------------------------------
+
+function downloadExcelTemplate(fileName, rows) {
+    const worksheet = XLSX.utils.json_to_sheet(rows);
+    const workbook = XLSX.utils.book_new();
+
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Import");
+
+    XLSX.writeFile(workbook, fileName);
+}
+
+downloadCategoryTemplate.addEventListener("click", () => {
+    downloadExcelTemplate("LocalBiz_Category_Template.xlsx", [
+        {
+            "Category Name": "Cakes",
+            "Description": "Fresh cakes",
+            "Display Order": 1,
+            "Published": "Yes",
+            "Image URL": ""
+        }
+    ]);
+});
+
+downloadProductTemplate.addEventListener("click", () => {
+    downloadExcelTemplate("LocalBiz_Product_Template.xlsx", [
+        {
+            "Product Name": "Chocolate Cake",
+            "Category": "Cakes",
+            "SKU": "CAKE001",
+            "Price": 500,
+            "Selling Price": 450,
+            "Description": "Chocolate cake",
+            "Image URL": "",
+            "Display Order": 1
+        }
+    ]);
+});
+
+function normalizeImportValue(value) {
+    return String(value ?? "").trim();
+}
+
+function importBoolean(value, defaultValue = false) {
+    const normalized = normalizeImportValue(value).toLowerCase();
+
+    if (["yes", "true", "1", "published"].includes(normalized)) {
+        return true;
+    }
+
+    if (["no", "false", "0", "hidden"].includes(normalized)) {
+        return false;
+    }
+
+    return defaultValue;
+}
+
+function readExcelFile(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+
+        reader.onload = event => {
+            try {
+                const workbook = XLSX.read(event.target.result, {
+                    type: "array"
+                });
+
+                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+
+                if (!firstSheet) {
+                    throw new Error("The Excel file has no worksheet.");
+                }
+
+                const rows = XLSX.utils.sheet_to_json(firstSheet, {
+                    defval: "",
+                    raw: false
+                });
+
+                resolve(rows);
+            } catch (error) {
+                reject(error);
+            }
+        };
+
+        reader.onerror = () => reject(
+            new Error("Unable to read the selected file.")
+        );
+
+        reader.readAsArrayBuffer(file);
+    });
+}
+
+// CATEGORY IMPORT
+
+categoryImportFile.addEventListener("change", async () => {
+    const file = categoryImportFile.files[0];
+
+    if (!file) return;
+
+    categoryImportFile.disabled = true;
+    showMessage(categoryImportMessage, "Reading category file...");
+
+    let imported = 0;
+    let skipped = 0;
+    let failed = 0;
+
+    try {
+        const rows = await readExcelFile(file);
+
+        if (!rows.length) {
+            throw new Error("The Excel file contains no records.");
+        }
+
+        const existingSlugs = new Set(
+            allCategories.map(c => c.slug.toLowerCase())
+        );
+
+        const fileSlugs = new Set();
+
+        for (let i = 0; i < rows.length; i++) {
+            const row = rows[i];
+
+            const name = normalizeImportValue(row["Category Name"]);
+
+            if (!name) {
+                failed++;
+                continue;
+            }
+
+            const slug = generateSlug(name);
+
+            if (!slug) {
+                failed++;
+                continue;
+            }
+
+            if (existingSlugs.has(slug) || fileSlugs.has(slug)) {
+                skipped++;
+                continue;
+            }
+
+            const orderValue = normalizeImportValue(row["Display Order"]);
+            const order = orderValue === "" ? 0 : Number(orderValue);
+
+            const imageUrl = normalizeImportValue(row["Image URL"]);
+
+            if (!validOrder(order) || !validImageUrl(imageUrl)) {
+                failed++;
+                continue;
+            }
+
+            const payload = {
+                business_id: currentBusinessId,
+                category_name: name,
+                slug,
+                description:
+                    normalizeImportValue(row["Description"]) || null,
+                image_url: imageUrl || null,
+                display_order: order,
+                is_published: importBoolean(row["Published"], false)
+            };
+
+            const { error } = await localBizClient
+                .from("categories")
+                .insert(payload);
+
+            if (error) {
+                console.error("Category import row error:", error);
+                failed++;
+            } else {
+                imported++;
+                existingSlugs.add(slug);
+                fileSlugs.add(slug);
+            }
+        }
+
+        await loadCategories();
+        await loadProducts();
+
+        showMessage(
+            categoryImportMessage,
+            `Import completed. Imported: ${imported}, Skipped: ${skipped}, Failed: ${failed}.`,
+            failed ? "error" : "success"
+        );
+
+    } catch (error) {
+        console.error(error);
+        showMessage(categoryImportMessage, error.message, "error");
+    } finally {
+        categoryImportFile.value = "";
+        categoryImportFile.disabled = false;
+    }
+});
+
+// PRODUCT IMPORT
+
+productImportFile.addEventListener("change", async () => {
+    const file = productImportFile.files[0];
+
+    if (!file) return;
+
+    productImportFile.disabled = true;
+    showMessage(productImportMessage, "Reading product file...");
+
+    let imported = 0;
+    let skipped = 0;
+    let failed = 0;
+
+    try {
+        const rows = await readExcelFile(file);
+
+        if (!rows.length) {
+            throw new Error("The Excel file contains no records.");
+        }
+
+        const categoryMap = new Map(
+            allCategories.map(category => [
+                category.category_name.trim().toLowerCase(),
+                category.id
+            ])
+        );
+
+        const existingSlugs = new Set(
+            allProducts.map(p => p.slug.toLowerCase())
+        );
+
+        const existingSkus = new Set(
+            allProducts
+                .map(p => (p.sku || "").trim().toLowerCase())
+                .filter(Boolean)
+        );
+
+        const fileSlugs = new Set();
+        const fileSkus = new Set();
+
+        for (let i = 0; i < rows.length; i++) {
+            const row = rows[i];
+
+            const name = normalizeImportValue(row["Product Name"]);
+            const categoryName = normalizeImportValue(row["Category"]);
+            const sku = normalizeImportValue(row["SKU"]);
+            const description = normalizeImportValue(row["Description"]);
+            const imageUrl = normalizeImportValue(row["Image URL"]);
+
+            if (!name || !categoryName) {
+                failed++;
+                continue;
+            }
+
+            const categoryId = categoryMap.get(
+                categoryName.toLowerCase()
+            );
+
+            if (!categoryId) {
+                failed++;
+                continue;
+            }
+
+            const slug = generateSlug(name);
+
+            if (!slug) {
+                failed++;
+                continue;
+            }
+
+            const normalizedSku = sku.toLowerCase();
+
+            if (
+                existingSlugs.has(slug) ||
+                fileSlugs.has(slug) ||
+                (normalizedSku &&
+                    (existingSkus.has(normalizedSku) ||
+                     fileSkus.has(normalizedSku)))
+            ) {
+                skipped++;
+                continue;
+            }
+
+            const priceText = normalizeImportValue(row["Price"]);
+            const sellingText = normalizeImportValue(row["Selling Price"]);
+            const orderText = normalizeImportValue(row["Display Order"]);
+
+            const price = Number(priceText);
+            const sellingPrice = sellingText === ""
+                ? null
+                : Number(sellingText);
+
+            const order = orderText === "" ? 0 : Number(orderText);
+
+            if (
+                priceText === "" ||
+                !Number.isFinite(price) ||
+                price < 0 ||
+                (sellingPrice !== null &&
+                    (!Number.isFinite(sellingPrice) || sellingPrice < 0)) ||
+                !validOrder(order) ||
+                !validImageUrl(imageUrl)
+            ) {
+                failed++;
+                continue;
+            }
+
+            const payload = {
+                business_id: currentBusinessId,
+                category_id: categoryId,
+                product_name: name,
+                slug,
+                description: description || null,
+                sku: sku || null,
+                product_image_url: imageUrl || null,
+                price,
+                selling_price: sellingPrice,
+                display_order: order,
+                is_published: false
+            };
+
+            const { error } = await localBizClient
+                .from("products")
+                .insert(payload);
+
+            if (error) {
+                console.error("Product import row error:", error);
+                failed++;
+            } else {
+                imported++;
+                existingSlugs.add(slug);
+                fileSlugs.add(slug);
+
+                if (normalizedSku) {
+                    existingSkus.add(normalizedSku);
+                    fileSkus.add(normalizedSku);
+                }
+            }
+        }
+
+        await loadProducts();
+
+        showMessage(
+            productImportMessage,
+            `Import completed. Imported: ${imported}, Skipped: ${skipped}, Failed: ${failed}.`,
+            failed ? "error" : "success"
+        );
+
+    } catch (error) {
+        console.error(error);
+        showMessage(productImportMessage, error.message, "error");
+    } finally {
+        productImportFile.value = "";
+        productImportFile.disabled = false;
+    }
+});
 
 // --------------------------------------------------
 // STORE APPEARANCE MANAGEMENT
