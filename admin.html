@@ -332,6 +332,47 @@ html {
         padding: 8px 10px;
     }
 }
+    .product-bulk-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin: 18px 0;
+    padding: 15px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 9px;
+}
+
+.product-bulk-toolbar label {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-weight: 600;
+}
+
+.product-bulk-toolbar input[type="checkbox"] {
+    width: auto;
+}
+
+.product-bulk-toolbar button {
+    padding: 10px 14px;
+    border: 0;
+    border-radius: 7px;
+    font-weight: 600;
+}
+
+.product-selection {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    font-size: 14px;
+}
+
+.product-selection input {
+    width: auto;
+}
 </style>
 </head>
 
@@ -776,8 +817,40 @@ html {
 </div>
 
 <div id="productImportMessage" class="message" role="status"></div>
-<div id="productsList" class="item-grid">Loading products...</div>
-    </section>
+
+<!-- BULK PRODUCT ACTIONS -->
+<div class="product-bulk-toolbar">
+
+    <label>
+        <input type="checkbox" id="selectAllProducts">
+        Select All Matching Products
+    </label>
+
+    <span id="selectedProductCount">0 selected</span>
+
+    <button type="button" class="primary-button"
+        id="publishSelectedProducts" disabled>
+        Publish Selected
+    </button>
+
+    <button type="button" class="secondary-button"
+        id="hideSelectedProducts" disabled>
+        Hide Selected
+    </button>
+
+    <button type="button" class="danger-button"
+        id="deleteSelectedProducts" disabled>
+        Delete Selected
+    </button>
+
+    <button type="button" class="primary-button"
+        id="publishAllProducts">
+        Publish All Products
+    </button>
+
+</div>
+
+<div id="productsList" class="item-grid">Loading products...</div>    </section>
 
 </main>
 
@@ -804,6 +877,7 @@ let editingCategoryId = null;
 let editingProductId = null;
 let allCategories = [];
 let allProducts = [];
+let selectedProductIds = new Set();
 let currentProductImageUrl = null;
 
 // Dashboard elements
@@ -867,6 +941,25 @@ const currentImageText = document.getElementById("currentImageText");
 const productPublished = document.getElementById("productPublished");
 const productMessage = document.getElementById("productMessage");
 const productsList = document.getElementById("productsList");
+// Bulk product action elements
+
+const selectAllProducts =
+    document.getElementById("selectAllProducts");
+
+const selectedProductCount =
+    document.getElementById("selectedProductCount");
+
+const publishSelectedProducts =
+    document.getElementById("publishSelectedProducts");
+
+const hideSelectedProducts =
+    document.getElementById("hideSelectedProducts");
+
+const deleteSelectedProducts =
+    document.getElementById("deleteSelectedProducts");
+
+const publishAllProducts =
+    document.getElementById("publishAllProducts");
 const categorySearch = document.getElementById("categorySearch");
 const productSearch = document.getElementById("productSearch");
 const saveProductButton = document.getElementById("saveProductButton");
@@ -1638,7 +1731,19 @@ async function loadProducts() {
     if (error) throw error;
 
     allProducts = data || [];
-    renderProducts();
+
+// Remove selections for products that no longer exist.
+const existingProductIds = new Set(
+    allProducts.map(product => product.id)
+);
+
+selectedProductIds = new Set(
+    [...selectedProductIds].filter(
+        id => existingProductIds.has(id)
+    )
+);
+
+renderProducts();
 }
 
 function renderProducts() {
@@ -1662,12 +1767,40 @@ if (filteredProducts.length === 0) {
     productsList.textContent = searchTerm
         ? "No matching products found."
         : "No products found. Add your first product above.";
+    updateProductSelectionControls(filteredProducts);
     return;
 }
 
 filteredProducts.forEach(product => {
         const card = document.createElement("div");
         card.className = "item-card";
+    // Product selection checkbox
+
+const selectionLabel = document.createElement("label");
+selectionLabel.className = "product-selection";
+
+const selectionCheckbox = document.createElement("input");
+selectionCheckbox.type = "checkbox";
+selectionCheckbox.checked = selectedProductIds.has(product.id);
+
+selectionCheckbox.addEventListener("change", () => {
+
+    if (selectionCheckbox.checked) {
+        selectedProductIds.add(product.id);
+    } else {
+        selectedProductIds.delete(product.id);
+    }
+
+    updateProductSelectionControls(filteredProducts);
+});
+
+selectionLabel.appendChild(selectionCheckbox);
+
+selectionLabel.appendChild(
+    document.createTextNode("Select product")
+);
+
+card.appendChild(selectionLabel);
 
         if (product.product_image_url) {
             const image = document.createElement("img");
@@ -1727,11 +1860,228 @@ filteredProducts.forEach(product => {
         actions.appendChild(createButton("Delete", "danger-button",
             () => deleteProduct(product)));
 
-        card.appendChild(actions);
-        productsList.appendChild(card);
+       card.appendChild(actions);
+productsList.appendChild(card);
     });
+
+    updateProductSelectionControls(filteredProducts);
 }
 // Category and product search listeners
+    
+function updateProductSelectionControls(filteredProducts) {
+
+    const visibleSelectedCount = filteredProducts.filter(
+        product => selectedProductIds.has(product.id)
+    ).length;
+
+    selectedProductCount.textContent =
+        selectedProductIds.size + " selected";
+
+    selectAllProducts.checked =
+        filteredProducts.length > 0 &&
+        visibleSelectedCount === filteredProducts.length;
+
+    selectAllProducts.indeterminate =
+        visibleSelectedCount > 0 &&
+        visibleSelectedCount < filteredProducts.length;
+
+    const hasSelection = selectedProductIds.size > 0;
+
+    publishSelectedProducts.disabled = !hasSelection;
+    hideSelectedProducts.disabled = !hasSelection;
+    deleteSelectedProducts.disabled = !hasSelection;
+
+    publishAllProducts.disabled = allProducts.length === 0;
+    selectAllProducts.disabled = filteredProducts.length === 0;
+}
+
+
+// Select all products matching the current search
+selectAllProducts.addEventListener("change", () => {
+
+    const searchTerm = productSearch.value.trim().toLowerCase();
+
+    const filteredProducts = allProducts.filter(product => {
+
+        const category = allCategories.find(
+            c => c.id === product.category_id
+        );
+
+        return (
+            (product.product_name || "").toLowerCase().includes(searchTerm) ||
+            (product.sku || "").toLowerCase().includes(searchTerm) ||
+            (category?.category_name || "").toLowerCase().includes(searchTerm)
+        );
+    });
+
+    filteredProducts.forEach(product => {
+
+        if (selectAllProducts.checked) {
+            selectedProductIds.add(product.id);
+        } else {
+            selectedProductIds.delete(product.id);
+        }
+
+    });
+
+    renderProducts();
+});
+
+
+// Publish or hide selected products
+async function updateSelectedProductVisibility(isPublished) {
+
+    const ids = allProducts
+        .filter(product => selectedProductIds.has(product.id))
+        .map(product => product.id);
+
+    if (!ids.length) {
+        showMessage(productMessage, "Select at least one product.", "error");
+        return;
+    }
+
+    const action = isPublished ? "publish" : "hide";
+
+    if (!confirm(
+        `${action} ${ids.length} selected product(s)?`
+    )) return;
+
+    try {
+
+        const { error } = await localBizClient
+            .from("products")
+            .update({ is_published: isPublished })
+            .eq("business_id", currentBusinessId)
+            .in("id", ids);
+
+        if (error) throw error;
+
+        selectedProductIds.clear();
+
+        await loadProducts();
+
+        showMessage(
+            productMessage,
+            `${ids.length} selected product(s) ${isPublished ? "published" : "hidden"} successfully.`,
+            "success"
+        );
+
+    } catch (error) {
+
+        console.error(error);
+        showMessage(productMessage, error.message, "error");
+
+    }
+}
+
+
+// Delete selected products
+async function deleteSelectedProductsInBulk() {
+
+    const ids = allProducts
+        .filter(product => selectedProductIds.has(product.id))
+        .map(product => product.id);
+
+    if (!ids.length) {
+        showMessage(productMessage, "Select at least one product.", "error");
+        return;
+    }
+
+    if (!confirm(
+        `Are you sure you want to permanently delete ${ids.length} selected product(s)? This cannot be undone. Uploaded image files will remain in Storage for now.`
+    )) return;
+
+    try {
+
+        const { error } = await localBizClient
+            .from("products")
+            .delete()
+            .eq("business_id", currentBusinessId)
+            .in("id", ids);
+
+        if (error) throw error;
+
+        if (editingProductId && ids.includes(editingProductId)) {
+            resetProductForm();
+        }
+
+        selectedProductIds.clear();
+
+        await loadProducts();
+
+        showMessage(
+            productMessage,
+            `${ids.length} selected product(s) deleted successfully.`,
+            "success"
+        );
+
+    } catch (error) {
+
+        console.error(error);
+        showMessage(productMessage, error.message, "error");
+
+    }
+}
+
+
+// Publish every product belonging to this business
+async function publishAllBusinessProducts() {
+
+    if (!allProducts.length) {
+        showMessage(productMessage, "No products available.", "error");
+        return;
+    }
+
+    if (!confirm(
+        `Publish all ${allProducts.length} products belonging to your business?`
+    )) return;
+
+    try {
+
+        const { error } = await localBizClient
+            .from("products")
+            .update({ is_published: true })
+            .eq("business_id", currentBusinessId);
+
+        if (error) throw error;
+
+        selectedProductIds.clear();
+
+        await loadProducts();
+
+        showMessage(
+            productMessage,
+            "All products published successfully.",
+            "success"
+        );
+
+    } catch (error) {
+
+        console.error(error);
+        showMessage(productMessage, error.message, "error");
+
+    }
+}
+
+
+// Bulk action button events
+
+publishSelectedProducts.addEventListener("click", () => {
+    updateSelectedProductVisibility(true);
+});
+
+hideSelectedProducts.addEventListener("click", () => {
+    updateSelectedProductVisibility(false);
+});
+
+deleteSelectedProducts.addEventListener("click", () => {
+    deleteSelectedProductsInBulk();
+});
+
+publishAllProducts.addEventListener("click", () => {
+    publishAllBusinessProducts();
+});
+
 categorySearch.addEventListener("input", renderCategories);
 productSearch.addEventListener("input", renderProducts);
 
