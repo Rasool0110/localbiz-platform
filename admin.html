@@ -747,18 +747,25 @@ html {
 
             
 
-            <div>
-                <label for="productPrice">Price (₹) *</label>
-                <input id="productPrice" type="number" min="0"
-                       step="0.01" required placeholder="500">
-            </div>
+            
+<div>
+    <label for="productCostPrice">Cost Price (₹) *</label>
+    <input id="productCostPrice" type="number"
+           min="0" step="0.01" required placeholder="300">
+</div>
 
-            <div>
-                <label for="productSellingPrice">Selling Price (₹)</label>
-                <input id="productSellingPrice" type="number" min="0"
-                       step="0.01" placeholder="450">
-                <p class="muted">Leave empty if there is no separate selling price.</p>
-            </div>
+<div>
+    <label for="productSellingPrice">Selling Price (₹) *</label>
+    <input id="productSellingPrice" type="number"
+           min="0" step="0.01" required placeholder="500">
+</div>
+
+<div>
+    <label for="productDiscountPercent">Discount (%)</label>
+    <input id="productDiscountPercent" type="number"
+           min="0" max="100" step="0.01"
+           value="0" placeholder="10">
+</div>
 
             <div>
                 <label for="productDisplayOrder">Display Order</label>
@@ -943,9 +950,10 @@ const productCategory = document.getElementById("productCategory");
 const productDescription = document.getElementById("productDescription");
 const productSku = document.getElementById("productSku");
 
-const productPrice = document.getElementById("productPrice");
+const productCostPrice = document.getElementById("productCostPrice");
 const productSellingPrice = document.getElementById("productSellingPrice");
-const productDisplayOrder = document.getElementById("productDisplayOrder");
+const productDiscountPercent =
+    document.getElementById("productDiscountPercent");const productDisplayOrder = document.getElementById("productDisplayOrder");
 const productImage = document.getElementById("productImage");
 const productImagePreview = document.getElementById("productImagePreview");
 const currentImageText = document.getElementById("currentImageText");
@@ -1633,8 +1641,9 @@ function editProduct(product) {
     productDescription.value = product.description || "";
     productSku.value = product.sku || "";
     
-    productPrice.value = product.price ?? "";
+    productCostPrice.value = product.cost_price ?? 0;
     productSellingPrice.value = product.selling_price ?? "";
+    productDiscountPercent.value = product.discount_percent ?? 0;
     productDisplayOrder.value = product.display_order ?? 0;
     productPublished.checked = product.is_published;
 
@@ -1717,44 +1726,66 @@ async function uploadProductImage(file) {
     return data.publicUrl;
 }
 
+
 async function loadProducts() {
     productsList.textContent = "Loading products...";
 
-    const { data, error } = await localBizClient
-        .from("products")
-        .select(`
-            id,
-            category_id,
-            product_name,
-            slug,
-            description,
-            sku,
-            product_image_url,
-            price,
-            selling_price,
-            
-            is_published,
-            display_order
-        `)
-        .eq("business_id", currentBusinessId)
-        .order("display_order", { ascending: true });
+    // Fetch public product information.
+    const { data: products, error: productsError } =
+        await localBizClient
+            .from("products")
+            .select(`
+                id,
+                category_id,
+                product_name,
+                slug,
+                description,
+                sku,
+                product_image_url,
+                selling_price,
+                discount_percent,
+                is_published,
+                display_order
+            `)
+            .eq("business_id", currentBusinessId)
+            .order("display_order", { ascending: true });
 
-    if (error) throw error;
+    if (productsError) throw productsError;
 
-    allProducts = data || [];
+    // Fetch private costs separately.
+    const { data: costs, error: costsError } =
+        await localBizClient
+            .from("product_costs")
+            .select("product_id, cost_price")
+            .eq("business_id", currentBusinessId);
 
-// Remove selections for products that no longer exist.
-const existingProductIds = new Set(
-    allProducts.map(product => product.id)
-);
+    if (costsError) throw costsError;
 
-selectedProductIds = new Set(
-    [...selectedProductIds].filter(
-        id => existingProductIds.has(id)
-    )
-);
+    // Match private costs with their products.
+    const costMap = new Map(
+        (costs || []).map(item => [
+            item.product_id,
+            item.cost_price
+        ])
+    );
 
-renderProducts();
+    allProducts = (products || []).map(product => ({
+        ...product,
+        cost_price: costMap.get(product.id) ?? 0
+    }));
+
+    // Remove selections for products that no longer exist.
+    const existingProductIds = new Set(
+        allProducts.map(product => product.id)
+    );
+
+    selectedProductIds = new Set(
+        [...selectedProductIds].filter(
+            id => existingProductIds.has(id)
+        )
+    );
+
+    renderProducts();
 }
 
 function renderProducts() {
@@ -1833,16 +1864,34 @@ card.appendChild(selectionLabel);
             (category?.category_name || "Unassigned");
         card.appendChild(categoryText);
 
-        const price = document.createElement("p");
-        price.textContent = "Price: ₹" + Number(product.price).toLocaleString("en-IN");
-        card.appendChild(price);
+        
+const cost = document.createElement("p");
+cost.textContent = "Cost Price: ₹" +
+    Number(product.cost_price).toLocaleString("en-IN");
+card.appendChild(cost);
 
-        if (product.selling_price !== null && product.selling_price !== undefined) {
-            const selling = document.createElement("p");
-            selling.textContent = "Selling Price: ₹" +
-                Number(product.selling_price).toLocaleString("en-IN");
-            card.appendChild(selling);
-        }
+const selling = document.createElement("p");
+selling.textContent = "Selling Price: ₹" +
+    Number(product.selling_price).toLocaleString("en-IN");
+card.appendChild(selling);
+
+const discount = Number(product.discount_percent || 0);
+
+const finalPrice = Number(product.selling_price) *
+    (1 - discount / 100);
+
+const discountText = document.createElement("p");
+discountText.textContent = "Discount: " + discount + "%";
+card.appendChild(discountText);
+
+const customerPrice = document.createElement("p");
+customerPrice.textContent = "Customer Price: ₹" +
+    finalPrice.toLocaleString("en-IN", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+card.appendChild(customerPrice);
+
 
         const sku = document.createElement("p");
         sku.textContent = "SKU: " + (product.sku || "Not set");
@@ -2098,20 +2147,23 @@ productSearch.addEventListener("input", renderProducts);
 
 // Product form submission
 
+
 productForm.addEventListener("submit", async event => {
     event.preventDefault();
 
     const name = productName.value.trim();
     const slug = generateSlug(name);
     const categoryId = productCategory.value;
-    const price = Number(productPrice.value);
-    const sellingPriceInput = productSellingPrice.value.trim();
-    const sellingPrice = sellingPriceInput === ""
-        ? null
-        : Number(sellingPriceInput);
+
+    const costPrice = Number(productCostPrice.value);
+    const sellingPrice = Number(productSellingPrice.value);
+    const discountPercent = Number(productDiscountPercent.value);
+
     const order = Number(productDisplayOrder.value);
     const file = productImage.files[0];
-    
+
+    const isEditing = Boolean(editingProductId);
+    const productId = editingProductId;
 
     if (!name || !slug) {
         showMessage(productMessage, "Enter a valid product name.", "error");
@@ -2128,24 +2180,48 @@ productForm.addEventListener("submit", async event => {
         return;
     }
 
-    if (!Number.isFinite(price) || price < 0 || productPrice.value.trim() === "") {
-        showMessage(productMessage, "Enter a valid product price.", "error");
+    if (
+        !Number.isFinite(costPrice) ||
+        costPrice < 0 ||
+        productCostPrice.value.trim() === ""
+    ) {
+        showMessage(productMessage, "Enter a valid cost price.", "error");
         return;
     }
 
-    if (sellingPrice !== null &&
-        (!Number.isFinite(sellingPrice) || sellingPrice < 0)) {
+    if (
+        !Number.isFinite(sellingPrice) ||
+        sellingPrice < 0 ||
+        productSellingPrice.value.trim() === ""
+    ) {
         showMessage(productMessage, "Enter a valid selling price.", "error");
         return;
     }
 
+    if (
+        !Number.isFinite(discountPercent) ||
+        discountPercent < 0 ||
+        discountPercent > 100
+    ) {
+        showMessage(productMessage, "Discount must be between 0 and 100.", "error");
+        return;
+    }
+
     if (!validOrder(order)) {
-        showMessage(productMessage, "Display order must be a non-negative whole number.", "error");
+        showMessage(
+            productMessage,
+            "Display order must be a non-negative whole number.",
+            "error"
+        );
         return;
     }
 
     if (file && file.size > 5 * 1024 * 1024) {
-        showMessage(productMessage, "Image must be 5 MB or smaller.", "error");
+        showMessage(
+            productMessage,
+            "Image must be 5 MB or smaller.",
+            "error"
+        );
         return;
     }
 
@@ -2153,6 +2229,7 @@ productForm.addEventListener("submit", async event => {
     saveProductButton.textContent = "Saving...";
 
     let uploadedImageUrl = currentProductImageUrl;
+    let newlyCreatedProductId = null;
 
     try {
         if (file) {
@@ -2160,49 +2237,112 @@ productForm.addEventListener("submit", async event => {
         }
 
         const payload = {
-    category_id: categoryId,
-    product_name: name,
-    slug,
-    description: productDescription.value.trim() || null,
-    sku: productSku.value.trim() || null,
-    product_image_url: uploadedImageUrl,
-    price,
-    selling_price: sellingPrice,
-    is_published: productPublished.checked,
-    display_order: order
-};
-        if (editingProductId) {
+            business_id: currentBusinessId,
+            category_id: categoryId,
+            product_name: name,
+            slug,
+            description: productDescription.value.trim() || null,
+            sku: productSku.value.trim() || null,
+            product_image_url: uploadedImageUrl,
+            selling_price: sellingPrice,
+            discount_percent: discountPercent,
+            is_published: productPublished.checked,
+            display_order: order
+        };
+
+        let savedProductId;
+
+        if (isEditing) {
             const { data, error } = await localBizClient
                 .from("products")
                 .update(payload)
-                .eq("id", editingProductId)
+                .eq("id", productId)
                 .eq("business_id", currentBusinessId)
                 .select("id");
 
             if (error) throw error;
-            if (!data?.length) throw new Error("Product was not updated.");
+
+            if (!data?.length) {
+                throw new Error("Product was not updated.");
+            }
+
+            savedProductId = data[0].id;
+
         } else {
-            const { error } = await localBizClient
+            const { data, error } = await localBizClient
                 .from("products")
                 .insert({
                     business_id: currentBusinessId,
                     ...payload
-                });
+                })
+                .select("id");
 
             if (error) throw error;
+
+            if (!data?.length) {
+                throw new Error("Product was not created.");
+            }
+
+            savedProductId = data[0].id;
+            newlyCreatedProductId = savedProductId;
+        }
+
+        // Save confidential cost in the private table.
+        const { error: costError } = await localBizClient
+            .from("product_costs")
+            .upsert({
+                business_id: currentBusinessId,
+                product_id: savedProductId,
+                cost_price: costPrice
+            }, {
+                onConflict: "business_id,product_id"
+            });
+
+        if (costError) {
+            // If a newly created product has no cost record,
+            // remove that product to avoid leaving incomplete data.
+            if (newlyCreatedProductId) {
+                const { error: rollbackError } = await localBizClient
+                    .from("products")
+                    .delete()
+                    .eq("id", newlyCreatedProductId)
+                    .eq("business_id", currentBusinessId);
+
+                if (rollbackError) {
+                    throw new Error(
+                        "Cost saving failed: " + costError.message +
+                        ". Product cleanup also failed: " +
+                        rollbackError.message
+                    );
+                }
+            }
+
+            throw new Error(
+                "Product cost could not be saved: " + costError.message
+            );
         }
 
         resetProductForm();
         await loadProducts();
 
-        showMessage(productMessage, "Product saved successfully.", "success");
+        showMessage(
+            productMessage,
+            "Product and pricing saved successfully.",
+            "success"
+        );
 
     } catch (error) {
         console.error("Product save error:", error);
-        showMessage(productMessage, error.message, "error");
+
+        showMessage(
+            productMessage,
+            error.message,
+            "error"
+        );
+
     } finally {
         saveProductButton.disabled = false;
-        saveProductButton.textContent = editingProductId
+        saveProductButton.textContent = isEditing
             ? "Update Product"
             : "Add Product";
     }
@@ -2283,15 +2423,15 @@ downloadProductTemplate.addEventListener("click", () => {
             "Product Name": "Chocolate Cake",
             "Category": "Cakes",
             "SKU": "CAKE001",
-            "Price": 500,
-            "Selling Price": 450,
+            "Cost Price": 300,
+            "Selling Price": 500,
+            "Discount Percent": 10,
             "Description": "Chocolate cake",
             "Image URL": "",
             "Display Order": 1
         }
     ]);
 });
-
 function normalizeImportValue(value) {
     return String(value ?? "").trim();
 }
@@ -2531,61 +2671,100 @@ productImportFile.addEventListener("change", async () => {
                 continue;
             }
 
-            const priceText = normalizeImportValue(row["Price"]);
-            const sellingText = normalizeImportValue(row["Selling Price"]);
-            const orderText = normalizeImportValue(row["Display Order"]);
+            const costText = normalizeImportValue(row["Cost Price"]);
+const sellingText = normalizeImportValue(row["Selling Price"]);
+const discountText = normalizeImportValue(row["Discount Percent"]);
+const orderText = normalizeImportValue(row["Display Order"]);
 
-            const price = Number(priceText);
-            const sellingPrice = sellingText === ""
-                ? null
-                : Number(sellingText);
+const costPrice = Number(costText);
+const sellingPrice = Number(sellingText);
+const discountPercent = discountText === ""
+    ? 0
+    : Number(discountText);
 
-            const order = orderText === "" ? 0 : Number(orderText);
+const order = orderText === "" ? 0 : Number(orderText);
 
-            if (
-                priceText === "" ||
-                !Number.isFinite(price) ||
-                price < 0 ||
-                (sellingPrice !== null &&
-                    (!Number.isFinite(sellingPrice) || sellingPrice < 0)) ||
-                !validOrder(order) ||
-                !validImageUrl(imageUrl)
-            ) {
-                failed++;
-                continue;
-            }
+if (
+    costText === "" ||
+    sellingText === "" ||
+    !Number.isFinite(costPrice) ||
+    costPrice < 0 ||
+    !Number.isFinite(sellingPrice) ||
+    sellingPrice < 0 ||
+    !Number.isFinite(discountPercent) ||
+    discountPercent < 0 ||
+    discountPercent > 100 ||
+    !validOrder(order) ||
+    !validImageUrl(imageUrl)
+) {
+    failed++;
+    continue;
+}
 
             const payload = {
-                business_id: currentBusinessId,
-                category_id: categoryId,
-                product_name: name,
-                slug,
-                description: description || null,
-                sku: sku || null,
-                product_image_url: imageUrl || null,
-                price,
-                selling_price: sellingPrice,
-                display_order: order,
-                is_published: false
-            };
+    business_id: currentBusinessId,
+    category_id: categoryId,
+    product_name: name,
+    slug,
+    description: description || null,
+    sku: sku || null,
+    product_image_url: imageUrl || null,
+    cost_price: costPrice,
+    selling_price: sellingPrice,
+    discount_percent: discountPercent,
+    display_order: order,
+    is_published: false
+};
 
-            const { error } = await localBizClient
-                .from("products")
-                .insert(payload);
+            const { data: insertedProduct, error } = await localBizClient
+    .from("products")
+    .insert(payload)
+    .select("id")
+    .single();
 
-            if (error) {
-                console.error("Product import row error:", error);
-                failed++;
-            } else {
-                imported++;
-                existingSlugs.add(slug);
-                fileSlugs.add(slug);
+if (error) {
+    console.error("Product import row error:", error);
+    failed++;
+    continue;
+}
 
-                if (normalizedSku) {
-                    existingSkus.add(normalizedSku);
-                    fileSkus.add(normalizedSku);
-                }
-            }
+// Save cost price in the private table.
+const { error: costError } = await localBizClient
+    .from("product_costs")
+    .upsert({
+        business_id: currentBusinessId,
+        product_id: insertedProduct.id,
+        cost_price: costPrice
+    }, {
+        onConflict: "business_id,product_id"
+    });
+
+if (costError) {
+    console.error("Product cost import error:", costError);
+
+    // Remove the product if its private cost could not be saved.
+    const { error: cleanupError } = await localBizClient
+        .from("products")
+        .delete()
+        .eq("id", insertedProduct.id)
+        .eq("business_id", currentBusinessId);
+
+    if (cleanupError) {
+        console.error("Product cleanup error:", cleanupError);
+    }
+
+    failed++;
+    continue;
+}
+
+imported++;
+existingSlugs.add(slug);
+fileSlugs.add(slug);
+
+if (normalizedSku) {
+    existingSkus.add(normalizedSku);
+    fileSkus.add(normalizedSku);
+}
         }
 
         await loadProducts();
