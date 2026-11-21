@@ -1151,7 +1151,12 @@ if (orderItemIds.length > 0) {
             .eq("business_id", currentBusinessId)
             .in("order_item_id", orderItemIds);
 
-    if (allocationError) throw allocationError;
+    if (allocationError) {
+    console.error("Allocation loading error:", allocationError);
+    ordersList.textContent =
+        "Unable to load order allocations: " + allocationError.message;
+    return;
+}
 
     allOrderAllocations = allocations || [];
 
@@ -1168,7 +1173,12 @@ if (orderItemIds.length > 0) {
                 .eq("business_id", currentBusinessId)
                 .in("id", branchIds);
 
-        if (branchError) throw branchError;
+        if (branchError) {
+    console.error("Branch loading error:", branchError);
+    ordersList.textContent =
+        "Unable to load branch names: " + branchError.message;
+    return;
+}
 
         orderBranchNames = Object.fromEntries(
             (branches || []).map(branch => [
