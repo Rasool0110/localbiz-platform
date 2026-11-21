@@ -1456,6 +1456,52 @@ function renderOrders() {
     card.appendChild(notes);
 }
 
+// Payment collection controls
+if (
+    order.status === "completed" &&
+    order.payment_status === "pending"
+) {
+    const paymentHeading = document.createElement("h4");
+    paymentHeading.textContent = "Collect Payment";
+    card.appendChild(paymentHeading);
+
+    const paymentActions = document.createElement("div");
+    paymentActions.className = "item-actions";
+
+    const paymentMethod = document.createElement("select");
+
+    const cashOption = document.createElement("option");
+    cashOption.value = "cash";
+    cashOption.textContent = "Cash";
+
+    const upiOption = document.createElement("option");
+    upiOption.value = "upi";
+    upiOption.textContent = "UPI";
+
+    paymentMethod.appendChild(cashOption);
+    paymentMethod.appendChild(upiOption);
+
+    const paymentNotes = document.createElement("input");
+    paymentNotes.type = "text";
+    paymentNotes.placeholder = "Payment notes (optional)";
+
+    const collectButton = createButton(
+        "Collect Payment",
+        "primary-button",
+        () => collectOrderPayment(
+            order,
+            paymentMethod.value,
+            paymentNotes.value.trim()
+        )
+    );
+
+    paymentActions.appendChild(paymentMethod);
+    paymentActions.appendChild(paymentNotes);
+    paymentActions.appendChild(collectButton);
+
+    card.appendChild(paymentActions);
+}
+
 // Order actions
 if (order.status === "pending") {
     const actions = document.createElement("div");
@@ -1478,7 +1524,50 @@ if (order.status === "pending") {
 
 ordersList.appendChild(card);
     });
+} 
+async function collectOrderPayment(order, method, notes) {
+    if (!["cash", "upi"].includes(method)) {
+        ordersMessage.textContent = "Please select a valid payment method.";
+        return;
+    }
+
+    if (!confirm(
+        "Confirm collection of ₹" +
+        Number(order.subtotal).toFixed(2) +
+        " through " + method.toUpperCase() + "?"
+    )) return;
+
+    try {
+        const { data, error } = await localBizClient.rpc(
+            "collect_order_payment",
+            {
+                p_order_id: order.id,
+                p_payment_method: method,
+                p_notes: notes || null
+            }
+        );
+
+        if (error) throw error;
+
+        if (!data?.success) {
+            throw new Error(
+                data?.message || "Unable to collect payment."
+            );
+        }
+
+        ordersMessage.textContent =
+            "Payment recorded successfully.";
+
+        await loadOrders();
+
+    } catch (error) {
+        console.error("Payment collection error:", error);
+
+        ordersMessage.textContent =
+            "Unable to collect payment: " + error.message;
+    }
 }
+
 
 // --------------------------------------------------
 // BRANCH MANAGEMENT
