@@ -423,6 +423,7 @@ html {
     <nav class="admin-quick-nav">
     <a href="#categorySection">Categories</a>
     <a href="#productSection">Products</a>
+    <a href="#ordersSection" id="ordersNavLink" hidden>Orders</a>
     <a href="#appearanceSection">Store Appearance</a>
     <a href="#branchSection" id="branchNavLink" hidden>Branches</a>
 </nav>
@@ -502,7 +503,18 @@ html {
         Loading branches...
     </div>
 </section>
+<!-- ORDER MANAGEMENT -->
 
+<section class="management-section" id="ordersSection" hidden>
+    <h2>Order Management</h2>
+    <p>View customer orders, manage fulfilment and collect payments.</p>
+
+    <div id="ordersMessage" class="message" role="status"></div>
+
+    <div id="ordersList" class="item-grid">
+        Loading orders...
+    </div>
+</section>
 
 <!-- STORE APPEARANCE -->
 
@@ -879,6 +891,7 @@ if (!localBizClient) {
 let currentBusinessId = null;
 let editingBranchId = null;
 let allBranches = [];
+let allOrders = [];
 let currentBusinessRole = null;
 let editingCategoryId = null;
 let editingProductId = null;
@@ -896,6 +909,17 @@ const logoutButton = document.getElementById("logoutButton");
 // Branch elements
 
 const branchSection = document.getElementById("branchSection");
+const ordersSection =
+    document.getElementById("ordersSection");
+
+const ordersNavLink =
+    document.getElementById("ordersNavLink");
+
+const ordersList =
+    document.getElementById("ordersList");
+
+const ordersMessage =
+    document.getElementById("ordersMessage");
 const branchNavLink = document.getElementById("branchNavLink");
 
 const branchForm = document.getElementById("branchForm");
@@ -1060,6 +1084,136 @@ function createButton(label, className, callback) {
     button.addEventListener("click", callback);
     return button;
 } 
+// --------------------------------------------------
+// ORDER MANAGEMENT
+// --------------------------------------------------
+
+async function loadOrders() {
+    ordersList.textContent = "Loading orders...";
+
+    const { data, error } = await localBizClient
+        .from("orders")
+        .select(`
+            id,
+            customer_name,
+            customer_phone,
+            customer_email,
+            delivery_address,
+            customer_notes,
+            status,
+            payment_status,
+            subtotal,
+            currency_code,
+            created_at,
+            order_items (
+                id,
+                product_name,
+                sku,
+                quantity,
+                unit_price,
+                line_total
+            )
+        `)
+        .eq("business_id", currentBusinessId)
+        .order("created_at", { ascending: false });
+
+    if (error) {
+        console.error("Order loading error:", error);
+        ordersList.textContent = "Unable to load orders: " + error.message;
+        return;
+    }
+
+    allOrders = data || [];
+    renderOrders();
+}
+
+function renderOrders() {
+    ordersList.replaceChildren();
+
+    if (allOrders.length === 0) {
+        ordersList.textContent = "No orders found.";
+        return;
+    }
+
+    allOrders.forEach(order => {
+        const card = document.createElement("div");
+        card.className = "item-card";
+
+        const heading = document.createElement("h3");
+        heading.textContent = "Order #" + order.id.slice(0, 8);
+        card.appendChild(heading);
+
+        const customer = document.createElement("p");
+        customer.textContent =
+            "Customer: " + (order.customer_name || "Not provided");
+        card.appendChild(customer);
+
+        const phone = document.createElement("p");
+        phone.textContent =
+            "Phone: " + (order.customer_phone || "Not provided");
+        card.appendChild(phone);
+
+        const address = document.createElement("p");
+        address.textContent =
+            "Delivery Address: " +
+            (order.delivery_address || "Not provided");
+        card.appendChild(address);
+
+        const status = document.createElement("p");
+        status.textContent =
+            "Order Status: " + order.status;
+        card.appendChild(status);
+
+        const payment = document.createElement("p");
+        payment.textContent =
+            "Payment Status: " + order.payment_status;
+        card.appendChild(payment);
+
+        const amount = document.createElement("p");
+        amount.textContent =
+            "Order Total: " +
+            new Intl.NumberFormat("en-IN", {
+                style: "currency",
+                currency: order.currency_code || "INR"
+            }).format(Number(order.subtotal || 0));
+        card.appendChild(amount);
+
+        const created = document.createElement("p");
+        created.textContent =
+            "Order Date: " +
+            new Date(order.created_at).toLocaleString("en-IN");
+        card.appendChild(created);
+
+        const itemsHeading = document.createElement("h4");
+        itemsHeading.textContent = "Ordered Products";
+        card.appendChild(itemsHeading);
+
+        (order.order_items || []).forEach(item => {
+            const itemDetails = document.createElement("p");
+
+            itemDetails.textContent =
+                item.product_name +
+                " × " + item.quantity +
+                " | " +
+                new Intl.NumberFormat("en-IN", {
+                    style: "currency",
+                    currency: order.currency_code || "INR"
+                }).format(Number(item.line_total || 0));
+
+            card.appendChild(itemDetails);
+        });
+
+        if (order.customer_notes) {
+            const notes = document.createElement("p");
+            notes.textContent =
+                "Customer Notes: " + order.customer_notes;
+            card.appendChild(notes);
+        }
+
+        ordersList.appendChild(card);
+    });
+}
+
 // --------------------------------------------------
 // BRANCH MANAGEMENT
 // --------------------------------------------------
@@ -3505,6 +3659,15 @@ async function loadDashboard() {
 
 const canManageBranches =
     ["owner", "admin"].includes(currentBusinessRole);
+        const canManageOrders =
+    ["owner", "admin"].includes(currentBusinessRole);
+
+ordersSection.hidden = !canManageOrders;
+ordersNavLink.hidden = !canManageOrders;
+
+if (canManageOrders) {
+    await loadOrders();
+}
 
 branchSection.hidden = !canManageBranches;
 branchNavLink.hidden = !canManageBranches;
