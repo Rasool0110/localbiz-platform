@@ -892,6 +892,8 @@ let currentBusinessId = null;
 let editingBranchId = null;
 let allBranches = [];
 let allOrders = [];
+let allOrderAllocations = [];
+let orderBranchNames = {};
 let currentBusinessRole = null;
 let editingCategoryId = null;
 let editingProductId = null;
@@ -1124,8 +1126,179 @@ async function loadOrders() {
     }
 
     allOrders = data || [];
-    renderOrders();
+
+const orderItemIds = allOrders.flatMap(order =>
+    (order.order_items || []).map(item => item.id)
+);
+
+allOrderAllocations = [];
+orderBranchNames = {};
+
+if (orderItemIds.length > 0) {
+
+    const { data: allocations, error: allocationError } =
+        await localBizClient
+            .from("order_item_allocations")
+            .select(`
+                id,
+                order_item_id,
+                branch_id,
+                quantity,
+                fulfilled_quantity,
+                released_quantity,
+                status
+            `)
+            .eq("business_id", currentBusinessId)
+            .in("order_item_id", orderItemIds);
+
+    if (allocationError) throw allocationError;
+
+    allOrderAllocations = allocations || [];
+
+    const branchIds = [
+        ...new Set(allOrderAllocations.map(item => item.branch_id))
+    ];
+
+    if (branchIds.length > 0) {
+
+        const { data: branches, error: branchError } =
+            await localBizClient
+                .from("business_branches")
+                .select("id, branch_name")
+                .eq("business_id", currentBusinessId)
+                .in("id", branchIds);
+
+        if (branchError) throw branchError;
+
+        orderBranchNames = Object.fromEntries(
+            (branches || []).map(branch => [
+                branch.id,
+                branch.branch_name
+            ])
+        );
+    }
 }
+
+renderOrders();
+}
+    
+async function acceptOrder(order) {
+    if (!confirm(
+        "Accept order #" + order.id.slice(0, 8) + "?"
+    )) return;
+
+    try {
+        const { data, error } = await localBizClient.rpc(
+            "accept_customer_order",
+            {
+                p_order_id: order.id
+            }
+        );
+
+        if (error) throw error;
+        if (!data?.success) {
+            throw new Error(data?.message || "Unable to accept order.");
+        }
+
+        ordersMessage.textContent = "Order accepted successfully.";
+        await loadOrders();
+
+    } catch (error) {
+        console.error("Accept order error:", error);
+        ordersMessage.textContent =
+            "Unable to accept order: " + error.message;
+    }
+}
+
+async function rejectOrder(order) {
+    if (!confirm(
+        "Reject order #" + order.id.slice(0, 8) +
+        "? Its reserved stock will be released."
+    )) return;
+
+    try {
+        const { data, error } = await localBizClient.rpc(
+            "reject_customer_order",
+            {
+                p_order_id: order.id
+            }
+        );
+
+        if (error) throw error;
+        if (!data?.success) {
+            throw new Error(data?.message || "Unable to reject order.");
+        }
+
+        ordersMessage.textContent =
+            "Order rejected and reservations released successfully.";
+
+        await loadOrders();
+
+    } catch (error) {
+        console.error("Reject order error:", error);
+        ordersMessage.textContent =
+            "Unable to reject order: " + error.message;
+    }
+}
+    async function fulfilOrder(order, item, allocation, quantityValue) {
+    const quantity = Number(quantityValue);
+
+    const remaining =
+        Number(allocation.quantity) -
+        Number(allocation.fulfilled_quantity || 0) -
+        Number(allocation.released_quantity || 0);
+
+    if (!Number.isInteger(quantity) || quantity < 1) {
+        ordersMessage.textContent =
+            "Please enter a valid fulfilment quantity.";
+        return;
+    }
+
+    if (quantity > remaining) {
+        ordersMessage.textContent =
+            "Quantity cannot exceed the remaining allocated quantity.";
+        return;
+    }
+
+    const branchName =
+        orderBranchNames[allocation.branch_id] || "Selected branch";
+
+    if (!confirm(
+        "Fulfil " + quantity + " unit(s) of " +
+        item.product_name + " from " + branchName + "?"
+    )) return;
+
+    try {
+        const { data, error } = await localBizClient.rpc(
+            "fulfil_order_from_branch",
+            {
+                p_order_item_id: item.id,
+                p_branch_id: allocation.branch_id,
+                p_quantity: quantity
+            }
+        );
+
+        if (error) throw error;
+
+        if (!data?.success) {
+            throw new Error(
+                data?.message || "Unable to fulfil order."
+            );
+        }
+
+        ordersMessage.textContent =
+            "Order item fulfilled successfully.";
+
+        await loadOrders();
+
+    } catch (error) {
+        console.error("Order fulfilment error:", error);
+
+        ordersMessage.textContent =
+            "Unable to fulfil order: " + error.message;
+    }
+}
+
 
 function renderOrders() {
     ordersList.replaceChildren();
@@ -1189,28 +1362,111 @@ function renderOrders() {
         card.appendChild(itemsHeading);
 
         (order.order_items || []).forEach(item => {
-            const itemDetails = document.createElement("p");
+    const itemDetails = document.createElement("p");
 
-            itemDetails.textContent =
-                item.product_name +
-                " × " + item.quantity +
-                " | " +
-                new Intl.NumberFormat("en-IN", {
-                    style: "currency",
-                    currency: order.currency_code || "INR"
-                }).format(Number(item.line_total || 0));
+    itemDetails.textContent =
+        item.product_name +
+        " × " + item.quantity +
+        " | " +
+        new Intl.NumberFormat("en-IN", {
+            style: "currency",
+            currency: order.currency_code || "INR"
+        }).format(Number(item.line_total || 0));
 
-            card.appendChild(itemDetails);
-        });
+    card.appendChild(itemDetails);
+
+    // Find allocations belonging to this order item
+    const itemAllocations = allOrderAllocations.filter(
+        allocation => allocation.order_item_id === item.id
+    );
+
+    itemAllocations.forEach(allocation => {
+        const allocated = Number(allocation.quantity || 0);
+        const fulfilled = Number(allocation.fulfilled_quantity || 0);
+        const released = Number(allocation.released_quantity || 0);
+
+        const remaining = allocated - fulfilled - released;
+
+        const branchName =
+            orderBranchNames[allocation.branch_id] ||
+            "Unknown Branch";
+
+        const allocationDetails = document.createElement("p");
+
+        allocationDetails.textContent =
+            "Branch: " + branchName +
+            " | Allocated: " + allocated +
+            " | Fulfilled: " + fulfilled +
+            " | Released: " + released +
+            " | Remaining: " + remaining;
+
+        card.appendChild(allocationDetails);
+
+        const canFulfil = [
+            "confirmed",
+            "processing",
+            "partially_fulfilled"
+        ].includes(order.status);
+
+        if (canFulfil && remaining > 0) {
+            const fulfilActions = document.createElement("div");
+            fulfilActions.className = "item-actions";
+
+            const quantityInput = document.createElement("input");
+            quantityInput.type = "number";
+            quantityInput.min = "1";
+            quantityInput.max = String(remaining);
+            quantityInput.step = "1";
+            quantityInput.value = String(remaining);
+            quantityInput.placeholder = "Quantity";
+
+            const fulfilButton = createButton(
+                "Fulfil from " + branchName,
+                "primary-button",
+                () => fulfilOrder(
+                    order,
+                    item,
+                    allocation,
+                    quantityInput.value
+                )
+            );
+
+            fulfilActions.appendChild(quantityInput);
+            fulfilActions.appendChild(fulfilButton);
+
+            card.appendChild(fulfilActions);
+        }
+    });
+});
 
         if (order.customer_notes) {
-            const notes = document.createElement("p");
-            notes.textContent =
-                "Customer Notes: " + order.customer_notes;
-            card.appendChild(notes);
-        }
+    const notes = document.createElement("p");
+    notes.textContent =
+        "Customer Notes: " + order.customer_notes;
+    card.appendChild(notes);
+}
 
-        ordersList.appendChild(card);
+// Order actions
+if (order.status === "pending") {
+    const actions = document.createElement("div");
+    actions.className = "item-actions";
+
+    actions.appendChild(createButton(
+        "Accept Order",
+        "primary-button",
+        () => acceptOrder(order)
+    ));
+
+    actions.appendChild(createButton(
+        "Reject Order",
+        "danger-button",
+        () => rejectOrder(order)
+    ));
+
+    card.appendChild(actions);
+}
+
+ordersList.appendChild(card);
     });
 }
 
